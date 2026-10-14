@@ -22,7 +22,7 @@ Minimal **Astro + React** starter: one landing page, Tailwind v4, room to grow a
 
 | Piece | Path |
 | ----- | ---- |
-| Smooth scroll | `src/components/islands/SmoothScroll.tsx` — mount once with `transition:persist` |
+| Smooth scroll | `SmoothScroll` in `Layout.astro` (Lenis, all pages) + `scrollSmoothTo()` in `src/lib/smoothScroll.ts` |
 | Hero stagger demo | `src/components/islands/LandingHero.tsx` |
 | Scroll reveal helper | `src/components/motion/Reveal.tsx` |
 | Shared easings / duration | `src/lib/motion/tokens.ts` |

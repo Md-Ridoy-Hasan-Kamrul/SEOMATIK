@@ -16,6 +16,20 @@
 	--motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Lenis smooth scroll — https://lenis.darkroom.engineering */
+html.lenis,
+html.lenis body {
+	height: auto;
+}
+
+html.lenis.lenis-smooth {
+	scroll-behavior: auto !important;
+}
+
+html.lenis.lenis-stopped {
+	overflow: hidden;
+}
+
 @layer base {
 	html {
 		scroll-behavior: auto;

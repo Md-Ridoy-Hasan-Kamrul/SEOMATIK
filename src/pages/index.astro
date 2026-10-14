@@ -1,11 +1,9 @@
 ---
 import LandingHero from '../components/islands/LandingHero.tsx';
-import SmoothScroll from '../components/islands/SmoothScroll.tsx';
 import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout>
-	<SmoothScroll client:load transition:persist="site-lenis" />
 	<div class="flex min-h-dvh flex-col">
 		<header class="px-[clamp(1rem,4vw,2rem)] py-6">
 			<p class="m-0 font-display text-lg font-bold tracking-tight text-ink">Seomatik</p>
@@ -17,4 +15,17 @@ import Layout from '../layouts/Layout.astro';
 			<p class="m-0 text-sm text-ink-soft">© {new Date().getFullYear()} Seomatik</p>
 		</footer>
 	</div>
+
+	<section
+		id="workspace"
+		class="mx-auto w-[min(100%-2rem,42rem)] px-4 pb-24 pt-10"
+		aria-label="Scroll workspace"
+	>
+		<p class="m-0 text-center text-sm text-ink-soft">
+			Smooth scroll (Lenis) is on — wheel down to feel it. New animated sections go here.
+		</p>
+		<div
+			class="mt-6 min-h-[85vh] rounded-2xl border border-dashed border-line bg-paper/50"
+		></div>
+	</section>
 </Layout>

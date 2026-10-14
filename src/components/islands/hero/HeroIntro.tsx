@@ -1,146 +1,107 @@
-import { useState } from 'react';
-import { motion } from 'motion/react';
-import '@fontsource/cinzel/500.css';
-import '@fontsource/cinzel/600.css';
-import {
-	HERO_BRAND,
-	HERO_BRANDLINE,
-	HERO_CTA,
-	HERO_NAV_ITEMS,
-} from './navItems';
-import { useHeroReveal } from './useHeroReveal';
+import { type CSSProperties, type RefObject, useRef } from 'react';
+import '@fontsource/gilda-display/400.css';
+import { CANYON_PLATES, PLATE_SIZE, WORDMARK_LETTER_CENTERS_EM } from '../../../lib/hero/canyonPlates';
+import { SCROLL } from '../../../lib/hero/canyonMorph';
+import { INTRO, type IntroLevels } from '../../../lib/hero/introTimeline';
+import { HeroNav } from './HeroNav';
+import { HERO_BRAND, HERO_BRANDLINE } from './navItems';
+import { useCanyonScene } from './useCanyonScene';
+import { useHeroIntro } from './useHeroIntro';
+import { usePrefersReducedMotion } from './usePrefersReducedMotion';
+import { useStartSignal } from './useStartSignal';
 import './hero-intro.css';
 
-function HeroNav({
-	open,
-	onToggle,
+const NO_SCRIPT_CSS = '.hero-wordmark,.hero-nav,.hero-tagline,.hero__plates,.hero__plates img:first-child{opacity:1}';
+
+function useHeroRefs() {
+	return {
+		sectionRef: useRef<HTMLElement>(null),
+		stageRef: useRef<HTMLDivElement>(null),
+		canvasRef: useRef<HTMLCanvasElement>(null),
+		platesRef: useRef<HTMLDivElement>(null),
+		plateImagesRef: useRef<(HTMLImageElement | null)[]>([]),
+		levelsRef: useRef<IntroLevels>({ slit: 0, rocks: 0, fog: 0 }),
+		wordmarkRef: useRef<HTMLHeadingElement>(null),
+		navRef: useRef<HTMLElement>(null),
+		taglineRef: useRef<HTMLParagraphElement>(null),
+	};
+}
+
+/** Stacked plates: WebGL texture sources, and the visible scene if WebGL is unavailable. */
+function CanyonPlates({
+	platesRef,
+	plateImagesRef,
 }: {
-	open: boolean;
-	onToggle: () => void;
+	platesRef: RefObject<HTMLDivElement | null>;
+	plateImagesRef: RefObject<(HTMLImageElement | null)[]>;
 }) {
 	return (
-		<nav className="hero-nav" aria-label="Primary">
-			<a className="hero-nav__brand" href="#top">
-				{HERO_BRAND}
-			</a>
-
-			<ul className="hero-nav__links" id="hero-menu" data-open={open || undefined}>
-				{HERO_NAV_ITEMS.map((item) => (
-					<li key={item.href}>
-						<a href={item.href} className="hero-nav__link">
-							{item.label}
-						</a>
-					</li>
-				))}
-			</ul>
-
-			<a className="hero-nav__cta" href="#projekt">
-				{HERO_CTA}
-				<span aria-hidden="true">→</span>
-			</a>
-
-			<button
-				type="button"
-				className="hero-nav__burger"
-				aria-expanded={open}
-				aria-controls="hero-menu"
-				aria-label={open ? 'Menü schließen' : 'Menü öffnen'}
-				onClick={onToggle}
-			>
-				<span aria-hidden="true" data-open={open || undefined} />
-			</button>
-		</nav>
+		<div ref={platesRef} className="hero__plates" aria-hidden="true">
+			{CANYON_PLATES.map((plate, i) => (
+				<img
+					key={plate.src}
+					ref={(el) => {
+						plateImagesRef.current[i] = el;
+					}}
+					src={plate.src}
+					alt=""
+					width={PLATE_SIZE.width}
+					height={PLATE_SIZE.height}
+					decoding="async"
+					fetchPriority={i === 0 ? 'high' : 'low'}
+					draggable={false}
+				/>
+			))}
+		</div>
 	);
 }
 
-/** SEOMATIK wordmark letters split so each can animate independently. */
-function Wordmark() {
+/** Each letter sits at its measured reference position and carries the silver sheen. */
+function Wordmark({ wordmarkRef }: { wordmarkRef: RefObject<HTMLHeadingElement | null> }) {
 	return (
-		<span className="hero-scene__chars" aria-hidden="true">
-			{HERO_BRAND.split('').map((char, index) => (
+		<h1 ref={wordmarkRef} className="hero-wordmark" aria-label={HERO_BRAND}>
+			{HERO_BRAND.split('').map((char, i) => (
 				<span
-					key={`${char}-${index}`}
-					className="hero-scene__char"
-					style={{ ['--char-index' as string]: index }}
+					key={i}
+					className="hero-wordmark__char"
+					aria-hidden="true"
+					style={{ '--x': WORDMARK_LETTER_CENTERS_EM[i] } as CSSProperties}
 				>
 					{char}
 				</span>
 			))}
-		</span>
+		</h1>
 	);
 }
 
 export default function HeroIntro() {
-	const [menuOpen, setMenuOpen] = useState(false);
-	const {
-		sceneRef,
-		ready,
-		reduceMotion,
-		leftWallTransform,
-		rightWallTransform,
-		beamWidth,
-		skyOpacity,
-		floorOpacity,
-		canyonScale,
-		wordmarkTransform,
-	} = useHeroReveal();
+	const refs = useHeroRefs();
+	const reducedMotion = usePrefersReducedMotion();
+	const { renderer, firstPlateReady } = useCanyonScene(refs, reducedMotion);
+	const start = useStartSignal(firstPlateReady, INTRO.FIRST_PLATE_TIMEOUT_MS);
+	const intro = useHeroIntro(refs, start, reducedMotion);
 
 	return (
-		<section ref={sceneRef} className="hero" id="top" aria-label="SEOMATIK">
-			<div
-				className="hero__sticky"
-				data-ready={ready || undefined}
-				data-reduced={reduceMotion || undefined}
-			>
-				<HeroNav open={menuOpen} onToggle={() => setMenuOpen((v) => !v)} />
-
-				<div className="hero-scene" aria-hidden="true">
-					{/* Revealed open canyon (photoreal base) brightens as the gap widens. */}
-					<motion.div
-						className="hero-scene__canyon"
-						style={{ opacity: skyOpacity, scale: canyonScale }}
-					/>
-
-					{/* Central light slit — the first thing visible on near-black load. */}
-					<motion.div className="hero-scene__beam" style={{ width: beamWidth }} />
-
-					{/* Two photoreal rock walls meeting at centre; they part on scroll. */}
-					<motion.div
-						className="hero-scene__wall hero-scene__wall--left"
-						style={{ transform: leftWallTransform }}
-					/>
-					<motion.div
-						className="hero-scene__wall hero-scene__wall--right"
-						style={{ transform: rightWallTransform }}
-					/>
-
-					{/* Slow volumetric fog. */}
-					<div className="hero-scene__fog hero-scene__fog--far" />
-					<div className="hero-scene__fog hero-scene__fog--near" />
-
-					{/* Wet-floor reflection of the central light. */}
-					<motion.div className="hero-scene__floor" style={{ opacity: floorOpacity }} />
-
-					{/* Cinematic polish. */}
-					<div className="hero-scene__vignette" />
-					<div className="hero-scene__grain" />
-				</div>
-
-				<motion.h1
-					className="hero-scene__wordmark"
-					aria-label={HERO_BRAND}
-					style={{ transform: wordmarkTransform }}
-				>
-					<Wordmark />
-				</motion.h1>
-
-				<p className="hero-scene__brandline">{HERO_BRANDLINE}</p>
-
-				<a className="hero-scene__scroll" href="#technologie" aria-label="Weiter scrollen">
-					<span className="hero-scene__scroll-dot" aria-hidden="true" />
-					<span className="hero-scene__scroll-label">Scroll</span>
-				</a>
+		<section
+			ref={refs.sectionRef}
+			className="hero"
+			id="top"
+			aria-label={HERO_BRAND}
+			data-hero=""
+			data-intro={intro}
+			data-renderer={renderer}
+			style={{ '--hero-track': `${SCROLL.TRACK_VH}vh` } as CSSProperties}
+		>
+			<div ref={refs.stageRef} className="hero__stage">
+				<CanyonPlates platesRef={refs.platesRef} plateImagesRef={refs.plateImagesRef} />
+				<canvas ref={refs.canvasRef} className="hero__canvas" aria-hidden="true" />
+				<HeroNav navRef={refs.navRef} />
+				<Wordmark wordmarkRef={refs.wordmarkRef} />
+				<p ref={refs.taglineRef} className="hero-tagline">
+					{HERO_BRANDLINE}
+				</p>
 			</div>
+			<noscript dangerouslySetInnerHTML={{ __html: `<style>${NO_SCRIPT_CSS}</style>` }} />
 		</section>
 	);
 }

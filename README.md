@@ -13,8 +13,34 @@ Minimal **Astro + React** starter: one landing page, Tailwind v4, room to grow a
 | Styles | Tailwind CSS v4 (`src/styles/global.css`) |
 | Deploy | Vercel adapter |
 | Tests | Vitest (unit) + Playwright (E2E) |
+| Motion | [Motion](https://motion.dev) (`motion/react`) in React islands |
+| Scroll | [Lenis](https://lenis.darkroom.engineering/) via `SmoothScroll` island |
 
 `astro.config.mjs` includes `react()` — interactive UI belongs in `src/components/islands/*.tsx` with `client:*` directives. Static markup stays in `.astro`.
+
+### Animation setup (already wired)
+
+| Piece | Path |
+| ----- | ---- |
+| Smooth scroll | `src/components/islands/SmoothScroll.tsx` — mount once with `transition:persist` |
+| Hero stagger demo | `src/components/islands/LandingHero.tsx` |
+| Scroll reveal helper | `src/components/motion/Reveal.tsx` |
+| Shared easings / duration | `src/lib/motion/tokens.ts` |
+
+New section pattern:
+
+```astro
+---
+import Reveal from '../components/motion/Reveal.tsx';
+---
+<section>
+  <Reveal client:visible>
+    <!-- wrap island content or use a dedicated island component -->
+  </Reveal>
+</section>
+```
+
+For complex motion (timelines, scroll triggers), add **GSAP** later in `src/lib/motion/` — Motion covers most UI entrance/hover work.
 
 ---
 

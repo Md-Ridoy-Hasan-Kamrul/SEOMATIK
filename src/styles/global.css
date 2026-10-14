@@ -10,6 +10,10 @@
 	--color-paper: #f7fafb;
 	--color-sea: #1a6b73;
 	--color-line: rgb(20 33 43 / 0.12);
+	--motion-duration-fast: 350ms;
+	--motion-duration-base: 600ms;
+	--motion-duration-slow: 900ms;
+	--motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @layer base {

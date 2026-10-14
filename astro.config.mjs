@@ -13,6 +13,9 @@ export default defineConfig({
 	cache: {
 		provider: memoryCache(),
 	},
+	server: {
+		open: true,
+	},
 	vite: {
 		plugins: [tailwindcss()],
 	},

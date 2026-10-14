@@ -39,7 +39,8 @@ docs/
 
 ```bash
 npm install
-astro dev --background   # local dev (see AGENTS.md)
+npm run dev              # opens browser automatically
+astro dev --background   # background dev (see AGENTS.md; also opens browser)
 npm run build
 npm test                 # Vitest
 npm run test:e2e         # Playwright (heading + title on `/`)

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 
+/** Asserts copy from `src/pages/index.astro` (hero `<h1>` + Layout title). */
 test('landing page loads', async ({ page }) => {
 	await page.goto('/');
 

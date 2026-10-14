@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+	<!-- Project site cursor  pointer / clickable -->
+	<path d="M16 3V29M3 16H29" stroke="#f4f8f9" stroke-width="1.35" stroke-linecap="square"/>
+	<path d="M16 3V29M3 16H29" stroke="#0099ff" stroke-width="1.35" stroke-linecap="square" opacity="0.5"/>
+	<circle cx="16" cy="16" r="3.25" fill="#f07c00" stroke="#ffb347" stroke-width="0.75"/>
+	<path d="M8 8H11M8 8V11M24 8H21M24 8V11M8 24H11M8 24V21M24 24H21M24 24V21" stroke="#f4f8f9" stroke-width="1" opacity="0.7"/>
+</svg>

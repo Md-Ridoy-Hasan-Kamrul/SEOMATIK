@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Vitest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/cache@v4
+        with:
+          path: |
+            node_modules/.astro
+            .astro
+          key: astro-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            astro-${{ runner.os }}-
+      - run: npm ci
+      - run: npm test
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/cache@v4
+        with:
+          path: |
+            node_modules/.astro
+            .astro
+          key: astro-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            astro-${{ runner.os }}-
+      - run: npm ci
+      - run: npm run build
+
+  e2e:
+    name: Playwright
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/cache@v4
+        with:
+          path: |
+            node_modules/.astro
+            .astro
+          key: astro-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            astro-${{ runner.os }}-
+      - run: npm ci
+      - run: npx playwright install chromium --with-deps
+      - run: npm run test:e2e
+        env:
+          CI: true
+
+  gate:
+    name: Quality gate
+    needs: [test, build, e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Vitest, production build, and Playwright passed. Safe to deploy."
+
+  deploy:
+    name: Deploy (Vercel)
+    needs: [gate]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.VERCEL_TOKEN != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Pull Vercel project
+        run: npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Build for Vercel
+        run: npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy prebuilt
+        run: npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}

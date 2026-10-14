@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+	<!-- Project site cursor  text / input -->
+	<path d="M12 6H20M16 6V26M12 26H20" stroke="#f4f8f9" stroke-width="1.35" stroke-linecap="square"/>
+	<path d="M12 6H20M16 6V26M12 26H20" stroke="#0099ff" stroke-width="1.35" stroke-linecap="square" opacity="0.4"/>
+	<rect x="14.5" y="14.5" width="3" height="3" fill="#f07c00"/>
+</svg>

@@ -1,0 +1,40 @@
+---
+import '../styles/global.css';
+import '@fontsource-variable/figtree';
+import '@fontsource/syne/700.css';
+import '@fontsource/space-mono/400.css';
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const {
+	title = 'Seomatik',
+	description = 'Animated website — starting soon.',
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+---
+
+<!doctype html>
+<html lang="en" class="overflow-x-clip">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<meta name="description" content={description} />
+		<link rel="canonical" href={canonical} />
+		<title>{title}</title>
+	</head>
+	<body class="overflow-x-clip">
+		<a
+			href="#main"
+			class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-sea focus:px-3 focus:py-2 focus:text-paper"
+		>
+			Skip to content
+		</a>
+		<slot />
+	</body>
+</html>

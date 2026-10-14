@@ -18,5 +18,13 @@ export default defineConfig({
 	},
 	vite: {
 		plugins: [tailwindcss()],
+		// React 19 + Vite dep-optimizer: force correct CJS interop for
+		// react-dom/client (createRoot) and dedupe a single React copy.
+		resolve: {
+			dedupe: ['react', 'react-dom'],
+		},
+		optimizeDeps: {
+			include: ['react', 'react-dom', 'react-dom/client', 'react/jsx-runtime'],
+		},
 	},
 });

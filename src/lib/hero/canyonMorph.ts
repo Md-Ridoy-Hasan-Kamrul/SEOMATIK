@@ -8,6 +8,8 @@ import {
 	LAST_FRAME,
 	SECTION2_START_FRAME,
 	SECTION3_START_FRAME,
+	SECTION4_DWELL,
+	SECTION4_START_FRAME,
 	WORDMARK_FADE_OUT_END,
 	WORDMARK_POSES,
 } from './canyonPlates';
@@ -15,11 +17,11 @@ import type { EdgeCurve, WordmarkPose } from './canyonPlates';
 import { clamp01, lerp, normalize, smoothstep } from './intro';
 
 export const SCROLL = {
-	/** Track height in vh: one sticky screen + the scrub distance for frames 1→10. */
-	TRACK_VH: 960,
+	/** Track height in vh: one sticky screen + the scrub distance for frames 1→13. */
+	TRACK_VH: 1220,
 	/** Progress kept on frame 1 before the canyon starts to open. */
 	HOLD_START: 0.03,
-	/** Progress at which frame 10 is reached; the rest of the track holds the final layout. */
+	/** Progress at which the last frame is reached; the rest of the track holds the final layout. */
 	HOLD_END: 0.92,
 	/** Per-second smoothing toward the scroll target (higher = snappier). */
 	DAMPING: 9,
@@ -112,6 +114,12 @@ function wordmarkOpacityAt(framePos: number): number {
 	return lerp(WORDMARK_POSES[from].opacity, WORDMARK_POSES[to].opacity, t);
 }
 
+/** Scroll offset into the hero track (vh) at which `framePos` is reached; for in-page anchors. */
+export function frameAnchorVh(framePos: number): number {
+	const progress = SCROLL.HOLD_START + (framePos / LAST_FRAME) * (SCROLL.HOLD_END - SCROLL.HOLD_START);
+	return progress * (SCROLL.TRACK_VH - 100);
+}
+
 export function wordmarkPoseAt(framePos: number): WordmarkPose {
 	const { from, to, t } = frameSegment(framePos);
 	return {
@@ -121,13 +129,10 @@ export function wordmarkPoseAt(framePos: number): WordmarkPose {
 	};
 }
 
-/**
- * Zoom applied to the outgoing plate while it dissolves into the next one. Only
- * in section 2, and 1 at every keyframe so each reference frame stays exact.
- */
-/** Segment fraction driving the plate change: whole segment in sections 1–2, early window in section 3. */
+/** Segment fraction driving the plate change: whole segment in sections 1–2, early window from section 3 on. */
 function dissolveT(framePos: number): { from: number; t: number } {
 	const { from, t } = frameSegment(framePos);
+	if (from === SECTION4_START_FRAME) return { from, t: normalize(t, SECTION4_DWELL, SECTION4_DWELL + CAMERA.S3_DISSOLVE_END) };
 	return { from, t: from >= SECTION3_START_FRAME ? normalize(t, 0, CAMERA.S3_DISSOLVE_END) : t };
 }
 
@@ -136,9 +141,13 @@ export function crossfadeAt(framePos: number): number {
 	return crossfadeWeight(dissolveT(framePos).t);
 }
 
+/**
+ * Zoom of the outgoing plate while it dissolves into the next (1 at every keyframe).
+ * Off once the search panels are live: they are anchored to fixed plate positions.
+ */
 export function cameraPushAt(framePos: number): number {
 	const { from, t } = dissolveT(framePos);
-	if (from < SECTION2_START_FRAME || t >= 1) return 1;
+	if (from < SECTION2_START_FRAME || from > SECTION4_START_FRAME || t >= 1) return 1;
 	return 1 + CAMERA.PUSH_MAX * smoothstep(t);
 }
 

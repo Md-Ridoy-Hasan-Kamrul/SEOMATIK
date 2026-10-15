@@ -9,6 +9,7 @@ import {
 	PLATE_SIZE,
 	SECTION2_START_FRAME,
 	SECTION3_START_FRAME,
+	SECTION4_START_FRAME,
 	WORDMARK_FADE_OUT_END,
 	WORDMARK_LETTER_CENTERS_EM,
 	WORDMARK_POSES,
@@ -22,10 +23,11 @@ const gapWidth = (index: number, v: number) =>
 	evalEdge(CANYON_PLATES[index].right, v) - evalEdge(CANYON_PLATES[index].left, v);
 
 describe('CANYON_PLATES data', () => {
-	it('has one plate per reference frame (Picture1..10)', () => {
-		expect(CANYON_PLATES).toHaveLength(10);
-		expect(LAST_FRAME).toBe(9);
+	it('has one plate per reference frame (Picture1..13)', () => {
+		expect(CANYON_PLATES).toHaveLength(13);
+		expect(LAST_FRAME).toBe(12);
 		expect(SECTION3_START_FRAME).toBe(7);
+		expect(SECTION4_START_FRAME).toBe(9);
 	});
 
 	it('starts section 2 (canyon reveal) on the frame-5 plate', () => {

@@ -5,6 +5,8 @@ import {
 	LAST_FRAME,
 	SECTION2_START_FRAME,
 	SECTION3_START_FRAME,
+	SECTION4_DWELL,
+	SECTION4_START_FRAME,
 	WORDMARK_FADE_OUT_END,
 	WORDMARK_POSES,
 } from './canyonPlates';
@@ -19,6 +21,7 @@ import {
 	crossfadeWeight,
 	damp,
 	evalEdge,
+	frameAnchorVh,
 	frameSegment,
 	framePosFromProgress,
 	interpolateCurve,
@@ -181,6 +184,10 @@ describe('cameraPushAt', () => {
 		expect(cameraPushAt(SECTION2_START_FRAME + 0.25)).toBeLessThan(cameraPushAt(SECTION2_START_FRAME + 0.75));
 		expect(cameraPushAt(SECTION2_START_FRAME + 1)).toBe(1);
 	});
+
+	it('holds still once the search panels are live (they are anchored to the plates)', () => {
+		for (let f = SECTION4_START_FRAME + 1; f <= LAST_FRAME; f += 0.1) expect(cameraPushAt(f)).toBe(1);
+	});
 });
 
 describe('crossfadeAt', () => {
@@ -193,6 +200,13 @@ describe('crossfadeAt', () => {
 		expect(crossfadeAt(f)).toBe(1);
 		expect(crossfadeAt(SECTION3_START_FRAME + 0.9)).toBe(1);
 		expect(crossfadeAt(SECTION3_START_FRAME)).toBe(0);
+	});
+});
+
+describe('section 4 dissolve', () => {
+	it('keeps Picture10 on screen during the dwell, then changes plates', () => {
+		expect(crossfadeAt(SECTION4_START_FRAME + SECTION4_DWELL)).toBe(0);
+		expect(crossfadeAt(SECTION4_START_FRAME + 0.9)).toBe(1);
 	});
 });
 
@@ -211,6 +225,16 @@ describe('parallaxStrengthAt', () => {
 		expect(parallaxStrengthAt(SECTION2_START_FRAME + 0.5)).toBeGreaterThan(0);
 		expect(parallaxStrengthAt(SECTION2_START_FRAME + 1)).toBe(1);
 		expect(parallaxStrengthAt(LAST_FRAME)).toBe(1);
+	});
+});
+
+describe('frameAnchorVh', () => {
+	it('is the scroll offset (vh into the track) at which a frame is reached', () => {
+		expect(frameAnchorVh(LAST_FRAME)).toBeCloseTo(SCROLL.HOLD_END * (SCROLL.TRACK_VH - 100), 10);
+		for (const f of [0, 3.5, SECTION4_START_FRAME]) {
+			const progress = frameAnchorVh(f) / (SCROLL.TRACK_VH - 100);
+			expect(framePosFromProgress(progress)).toBeCloseTo(f, 10);
+		}
 	});
 });
 

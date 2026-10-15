@@ -1,0 +1,555 @@
+/*
+ * Section 4 — The New Search Landscape.
+ * Headline + CTA sit on the 1352×968 design canvas scaled to fit (--u-fit).
+ * Glass panels are laid out in local px and put in perspective by a per-frame
+ * matrix3d (searchDom.ts); connections are SVG paths in screen px.
+ */
+
+.sl {
+	--u-fit: min(calc(100cqw / 1352), calc(100cqh / 968));
+	--page-mid-y: 484;
+	--warm: 255 184 108;
+	--warm-core: #ffe7c4;
+	position: absolute;
+	inset: 0;
+	z-index: 4;
+	pointer-events: none;
+	opacity: var(--sl-presence, 0);
+}
+
+.sl__head > * {
+	margin: 0;
+}
+
+/* ---------------------------------------------------------- headline --- */
+
+.sl__kicker,
+.sl__title,
+.sl__sub-line {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	line-height: 1;
+	white-space: nowrap;
+}
+
+.sl__kicker {
+	padding-left: calc(var(--track) * 1em);
+	font-family: var(--font-body);
+	font-weight: 400;
+	font-size: calc(var(--size) * var(--u-fit));
+	letter-spacing: calc(var(--track) * 1em);
+	text-transform: uppercase;
+	color: rgb(232 235 240 / 0.84);
+	transform: translate(calc(-50% + var(--x) * var(--u-fit)), calc(-50% + (var(--y) - var(--page-mid-y)) * var(--u-fit) + 0.02em));
+	opacity: var(--sl-k, 0);
+}
+
+.sl__title {
+	padding-left: calc(var(--track) * 1em);
+	font-family: 'Gilda Display', Georgia, 'Times New Roman', serif;
+	font-weight: 400;
+	font-size: calc(var(--size) * var(--u-fit));
+	letter-spacing: calc(var(--track) * 1em);
+	text-transform: uppercase;
+	background: linear-gradient(100deg, #ffffff 0%, #f1f2f4 55%, #c9ccd2 100%);
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+	filter: drop-shadow(0 2px 16px rgb(0 0 0 / 0.35));
+	transform: translate(calc(-50% + var(--x) * var(--u-fit)), calc(-50% + (var(--y) - var(--page-mid-y)) * var(--u-fit) + 0.054em + (1 - var(--sl-t, 0)) * 12px));
+	opacity: var(--sl-t, 0);
+}
+
+.sl__sub-line {
+	font-family: var(--font-body);
+	font-weight: 400;
+	font-size: calc(var(--size) * var(--u-fit));
+	line-height: calc(var(--lh) * var(--u-fit));
+	text-align: center;
+	color: rgb(240 238 234 / 0.92);
+	text-shadow: 0 0 14px rgb(0 0 0 / 0.5);
+	transform: translate(calc(-50% + var(--x) * var(--u-fit)), calc((var(--y) - var(--page-mid-y)) * var(--u-fit) - var(--lh) * var(--u-fit) / 2 + (1 - var(--sl-s, 0)) * 10px));
+	opacity: var(--sl-s, 0);
+}
+
+.sl__sub-line > span:not(.sl__sr) {
+	display: block;
+}
+
+.sl__sr {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}
+
+/* ------------------------------------------------------- connections --- */
+
+.sl__links {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+
+.sl__halo,
+.sl__core,
+.sl__shimmer {
+	fill: none;
+	stroke-linecap: round;
+}
+
+.sl__halo,
+.sl__core {
+	stroke-dasharray: 1 2;
+	stroke-dashoffset: calc(1 - var(--draw, 0));
+}
+
+.sl__strand {
+	opacity: var(--sl-strands-a, 1);
+	transition: filter 300ms ease;
+}
+
+.sl__strand .sl__halo {
+	stroke: rgb(var(--warm) / 0.7);
+	stroke-width: 6;
+}
+
+.sl__strand .sl__core {
+	stroke: #fff3de;
+	stroke-width: 1.4;
+}
+
+.sl__ribbon .sl__halo {
+	stroke: rgb(var(--warm) / 0.75);
+	stroke-width: 22;
+}
+
+.sl__ribbon .sl__core {
+	stroke: #fff4e0;
+	stroke-width: 3.6;
+	filter: drop-shadow(0 0 4px rgb(var(--warm)));
+}
+
+/* travelling light along the ribbon once it is fully drawn */
+.sl__shimmer {
+	stroke: #ffffff;
+	stroke-width: 2.4;
+	stroke-dasharray: 0.05 0.95;
+	opacity: clamp(0, calc((var(--draw, 0) - 0.95) * 20), 1);
+	filter: drop-shadow(0 0 5px rgb(var(--warm)));
+	animation: sl-shimmer 4.2s linear infinite;
+}
+
+@keyframes sl-shimmer {
+	from { stroke-dashoffset: 1; }
+	to { stroke-dashoffset: 0; }
+}
+
+.sl__pulse {
+	fill: #fff4e2;
+	filter: drop-shadow(0 0 4px rgb(var(--warm)));
+	opacity: clamp(0, calc((var(--draw, 0) - 0.96) * 25), 1);
+}
+
+/* hovering a realm brightens the connections that touch it */
+.sl:has(.sl__item[data-key='seo']:is(:hover, :focus-visible)) [data-ends~='seo'],
+.sl:has(.sl__item[data-key='sea']:is(:hover, :focus-visible)) [data-ends~='sea'],
+.sl:has(.sl__item[data-key='geo']:is(:hover, :focus-visible)) [data-ends~='geo'],
+.sl:has(.sl__item[data-key='gea']:is(:hover, :focus-visible)) [data-ends~='gea'] {
+	filter: brightness(1.45) drop-shadow(0 0 6px rgb(var(--warm) / 0.8));
+}
+
+/* ------------------------------------------------------------ panels --- */
+
+.sl__items {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.sl__item {
+	position: absolute;
+	left: 0;
+	top: 0;
+	outline: none;
+}
+
+/* hover "steps toward the foreground": scale about the panel's own centre */
+.sl__lift {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 0;
+	height: 0;
+	transform-origin: calc(var(--cx, 0) * 1px) calc(var(--cy, 0) * 1px);
+	transition: scale 480ms cubic-bezier(0.22, 1, 0.36, 1), translate 480ms cubic-bezier(0.22, 1, 0.36, 1), filter 300ms ease;
+}
+
+.sl__panel {
+	--reveal: max(var(--appear, 0), min(calc(var(--ghost, 0) * 100), 1));
+	position: absolute;
+	left: 0;
+	top: 0;
+	transform-origin: 0 0;
+	opacity: max(var(--appear, 0), var(--ghost, 0));
+	/* materialises upward out of the rock, and always melts into it at the base */
+	-webkit-mask-image: linear-gradient(to top, #000 calc(var(--reveal) * 130% - 30%), transparent calc(var(--reveal) * 130%)), linear-gradient(to top, transparent 0, #000 7%);
+	-webkit-mask-composite: source-in;
+	mask-image: linear-gradient(to top, #000 calc(var(--reveal) * 130% - 30%), transparent calc(var(--reveal) * 130%)), linear-gradient(to top, transparent 0, #000 7%);
+	mask-composite: intersect;
+	backface-visibility: hidden;
+}
+
+.sl__glass,
+.sl__frame {
+	position: absolute;
+	inset: 0;
+	border-radius: 7px;
+}
+
+.sl__glass {
+	background:
+		radial-gradient(120% 60% at 30% 0%, rgb(255 236 210 / 0.1), transparent 60%),
+		linear-gradient(165deg, rgb(52 50 50 / 0.5), rgb(22 22 26 / 0.66) 42%, rgb(12 12 16 / 0.74));
+	box-shadow: inset 0 0 0 1px rgb(226 230 238 / 0.22);
+}
+
+.sl__glass::after {
+	content: '';
+	position: absolute;
+	inset: 8px;
+	border: 1px solid rgb(255 255 255 / 0.1);
+	border-radius: 4px;
+}
+
+.sl__frame {
+	border: 2.2px solid #fff6e6;
+	box-shadow:
+		0 0 4px 1px #fff1d6,
+		0 0 12px 3px rgb(var(--warm) / 0.95),
+		0 0 32px 7px rgb(var(--warm) / 0.6),
+		0 0 80px 14px rgb(var(--warm) / 0.26),
+		inset 0 0 16px rgb(var(--warm) / 0.45);
+	opacity: var(--appear, 0);
+	transition: box-shadow 300ms ease;
+}
+
+.sl__flare {
+	position: absolute;
+	top: 0;
+	width: 34px;
+	height: 34px;
+	border-radius: 50%;
+	background: radial-gradient(circle, #ffffff 0, rgb(255 230 190 / 0.9) 14%, rgb(var(--warm) / 0.35) 38%, transparent 66%);
+	translate: -50% -50%;
+	opacity: var(--appear, 0);
+	mix-blend-mode: screen;
+}
+
+.sl__flare--tl { left: 0; }
+.sl__flare--tr { left: 100%; }
+
+.sl__icon,
+.sl__label,
+.sl__sub,
+.sl__lines {
+	position: absolute;
+	left: 50%;
+	translate: -50% -50%;
+}
+
+.sl__icon {
+	top: calc(var(--icon-y) * 1px);
+	width: calc(46px * var(--k));
+	height: calc(46px * var(--k));
+	fill: none;
+	stroke: #fbf6ee;
+	stroke-width: 1.7;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	filter: drop-shadow(0 0 4px rgb(var(--warm) / 0.45));
+}
+
+.sl__icon-core {
+	fill: #fbf6ee;
+}
+
+.sl__label {
+	top: calc(var(--label-y) * 1px);
+	font-family: 'Gilda Display', Georgia, serif;
+	font-size: calc(26px * var(--k));
+	letter-spacing: 0.04em;
+	line-height: 1;
+	color: #f6f2ea;
+	text-shadow: 0 0 10px rgb(var(--warm) / 0.35);
+}
+
+.sl__sub {
+	top: calc(var(--sub-y) * 1px);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.35em;
+	font-family: var(--font-body);
+	font-weight: 600;
+	font-size: calc(11.5px * var(--k));
+	letter-spacing: 0.14em;
+	line-height: 1;
+	text-transform: uppercase;
+	white-space: nowrap;
+	color: rgb(236 232 224 / 0.84);
+}
+
+.sl__lines {
+	top: calc(var(--lines-y) * 1px);
+	translate: -50% 0;
+	display: grid;
+	gap: 7px;
+	width: 74%;
+}
+
+.sl__lines i {
+	display: block;
+	height: 1.5px;
+	border-radius: 1px;
+	background: rgb(255 255 255 / 0.26);
+}
+
+.sl__lines i:nth-child(1) { width: 92%; background: rgb(255 222 180 / 0.5); }
+.sl__lines i:nth-child(2) { width: 70%; }
+.sl__lines i:nth-child(3) { width: 84%; margin-bottom: 9px; }
+.sl__lines i:nth-child(4) { width: 96%; }
+.sl__lines i:nth-child(5) { width: 62%; }
+.sl__lines i:nth-child(6) { width: 78%; }
+
+/* ------------------------------------------------- hover + info card --- */
+
+.hero__stage[data-sl-live] .sl__panel {
+	pointer-events: auto;
+}
+
+.hero__stage[data-sl-live] .sl__item:is(:hover, :focus-visible) .sl__lift {
+	scale: 1.07;
+	translate: 0 -8px;
+}
+
+.sl__item:is(:hover, :focus-visible) .sl__frame {
+	box-shadow:
+		0 0 6px 2px rgb(var(--warm)),
+		0 0 30px 6px rgb(var(--warm) / 0.7),
+		0 0 80px 14px rgb(var(--warm) / 0.3),
+		inset 0 0 18px rgb(var(--warm) / 0.45);
+}
+
+.sl__item:focus-visible .sl__frame {
+	outline: 1px solid #fff;
+	outline-offset: 5px;
+}
+
+.hero__stage[data-sl-live] .sl__items:has(.sl__item:is(:hover, :focus-visible)) .sl__item:not(:hover, :focus-visible) .sl__lift {
+	filter: brightness(0.62) saturate(0.8);
+}
+
+.sl__info {
+	position: absolute;
+	left: calc(var(--ix, -999) * 1px);
+	top: calc(var(--iy, -999) * 1px);
+	width: 264px;
+	padding: 14px 16px 15px;
+	border: 1px solid rgb(255 214 160 / 0.42);
+	border-radius: 12px;
+	background: linear-gradient(160deg, rgb(30 28 26 / 0.86), rgb(10 10 14 / 0.9));
+	box-shadow: 0 0 22px rgb(var(--warm) / 0.22), 0 18px 40px rgb(0 0 0 / 0.45);
+	backdrop-filter: blur(10px);
+	color: #f2efe9;
+	opacity: 0;
+	visibility: hidden;
+	translate: 0 8px;
+	transition: opacity 260ms ease, translate 360ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 260ms;
+}
+
+.sl__item[data-anchor='top'] .sl__info,
+.sl[data-grid] .sl__info {
+	transform: translate(-50%, -100%);
+}
+
+.hero__stage[data-sl-live] .sl__item:is(:hover, :focus-visible) .sl__info {
+	opacity: 1;
+	visibility: visible;
+	translate: 0 0;
+	transition: opacity 260ms ease, translate 360ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s;
+}
+
+.sl__info strong {
+	display: block;
+	font-family: 'Gilda Display', Georgia, serif;
+	font-size: 21px;
+	font-weight: 400;
+	letter-spacing: 0.08em;
+	line-height: 1;
+}
+
+.sl__info-sub {
+	display: block;
+	margin-top: 6px;
+	font-family: var(--font-body);
+	font-size: 10.5px;
+	font-weight: 600;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: rgb(255 214 160 / 0.9);
+}
+
+.sl__info p {
+	margin: 9px 0 0;
+	font-family: var(--font-body);
+	font-size: 13.5px;
+	line-height: 1.5;
+	color: rgb(240 238 234 / 0.9);
+}
+
+/* --------------------------------------------------------------- CTA --- */
+
+.sl__cta {
+	position: absolute;
+	left: calc(50% + (var(--x0) - 676) * var(--u-fit));
+	top: calc(50% + (var(--y0) - var(--page-mid-y)) * var(--u-fit));
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: calc(26 * var(--u-fit));
+	width: calc((var(--x1) - var(--x0)) * var(--u-fit));
+	height: calc((var(--y1) - var(--y0)) * var(--u-fit));
+	border: 1.5px solid rgb(255 214 160 / 0.88);
+	border-radius: 999px;
+	background: rgb(22 20 18 / 0.72);
+	box-shadow: 0 0 14px rgb(var(--warm) / 0.55), inset 0 0 12px rgb(var(--warm) / 0.2);
+	font-family: var(--font-body);
+	font-size: max(13px, calc(var(--size) * var(--u-fit)));
+	color: #fbf7f0;
+	text-decoration: none;
+	white-space: nowrap;
+	opacity: var(--sl-cta, 0);
+	translate: 0 calc((1 - var(--sl-cta, 0)) * 10px);
+	transition: background-color 220ms ease, box-shadow 220ms ease;
+}
+
+.sl__cta:hover {
+	background: rgb(40 34 28 / 0.82);
+	box-shadow: 0 0 22px rgb(var(--warm) / 0.75), inset 0 0 14px rgb(var(--warm) / 0.3);
+}
+
+.sl__cta:focus-visible {
+	outline: 1px solid #fff;
+	outline-offset: 4px;
+}
+
+.hero__stage[data-sl-cta] .sl__cta {
+	pointer-events: auto;
+}
+
+/* ---------------------------------------------------- reduced motion --- */
+
+@media (prefers-reduced-motion: reduce) {
+	.sl__pulse,
+	.sl__shimmer {
+		display: none;
+	}
+
+	.sl__lift,
+	.sl__info {
+		transition: none;
+	}
+}
+
+/* ------------------------------------------- mobile grid (data-grid) --- */
+
+/* The plates hold the scene-layout glass; on the grid a dark veil keeps cards and copy legible. */
+.sl[data-grid]::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background:
+		linear-gradient(180deg, rgb(6 6 9 / 0.55) 0%, rgb(6 6 9 / 0.35) 40%, rgb(6 6 9 / 0.62) 100%),
+		radial-gradient(90% 55% at 50% 58%, rgb(6 6 9 / 0.45), transparent 80%);
+	backdrop-filter: blur(6px);
+}
+
+.sl[data-grid] .sl__panel {
+	--k: 1 !important;
+	--icon-y: 42 !important;
+	--label-y: 96 !important;
+	--sub-y: 136 !important;
+	height: 190px !important;
+}
+
+.sl[data-grid] .sl__lines,
+.sl[data-grid] .sl__flare {
+	display: none;
+}
+
+@media (max-width: 768px) {
+	.sl__head {
+		position: absolute;
+		top: 84px;
+		left: 16px;
+		right: 16px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 12px;
+		text-align: center;
+	}
+
+	.sl__kicker,
+	.sl__title,
+	.sl__sub-line {
+		position: static;
+		transform: none;
+		white-space: normal;
+	}
+
+	.sl__kicker {
+		font-size: 10px;
+		letter-spacing: 0.34em;
+		padding-left: 0.34em;
+	}
+
+	.sl__title {
+		font-size: clamp(24px, 7.4vw, 44px);
+		letter-spacing: 0.1em;
+		padding-left: 0.1em;
+		line-height: 1.1;
+	}
+
+	.sl__sub-line {
+		max-width: 34ch;
+		font-size: 13.5px;
+		line-height: 1.5;
+	}
+
+	.sl__sub-line > span:not(.sl__sr) {
+		display: inline;
+	}
+
+	.sl__cta {
+		left: 50%;
+		top: auto;
+		bottom: 24px;
+		width: min(100% - 32px, 360px);
+		height: 48px;
+		gap: 14px;
+		font-size: 14px;
+		transform: translateX(-50%);
+	}
+
+	.sl__info {
+		width: min(264px, calc(100vw - 32px));
+	}
+}

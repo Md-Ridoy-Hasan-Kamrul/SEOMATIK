@@ -31,6 +31,10 @@ export const CANYON_PLATES: readonly CanyonPlate[] = [
 	// Section 3 (Growth System): not a canyon gap any more, so edges repeat frame 8 and warp is off.
 	{ src: '/assets/hero/plates/plate-9.webp', left: [0.23587, 0.02876, -0.25176], right: [0.97233, -0.14045, 0.06012] },
 	{ src: '/assets/hero/plates/plate-10.webp', left: [0.23587, 0.02876, -0.25176], right: [0.97233, -0.14045, 0.06012] },
+	// Section 4 (New Search Landscape): glass panels and connections are live DOM over these plates.
+	{ src: '/assets/hero/plates/plate-11.webp', left: [0.23587, 0.02876, -0.25176], right: [0.97233, -0.14045, 0.06012] },
+	{ src: '/assets/hero/plates/plate-12.webp', left: [0.23587, 0.02876, -0.25176], right: [0.97233, -0.14045, 0.06012] },
+	{ src: '/assets/hero/plates/plate-13.webp', left: [0.23587, 0.02876, -0.25176], right: [0.97233, -0.14045, 0.06012] },
 ];
 
 export const LAST_FRAME = CANYON_PLATES.length - 1;
@@ -40,6 +44,12 @@ export const SECTION2_START_FRAME = 4;
 
 /** Frame index of Picture8: section 2 is complete and the Growth System begins. */
 export const SECTION3_START_FRAME = 7;
+
+/** Frame index of Picture10: the Growth System is complete and the New Search Landscape begins. */
+export const SECTION4_START_FRAME = 9;
+
+/** Frames the finished Growth System stays on screen (and interactive) before section 4 begins. */
+export const SECTION4_DWELL = 0.2;
 
 /** Section 3 extras: plate 9 without the seven specialist rocks (they rise in) and per-rock masks. */
 export const GROWTH_ASSETS = {
@@ -86,4 +96,7 @@ export const WORDMARK_POSES: readonly WordmarkPose[] = [
 	{ shiftYEm: -1.9, scale: 1.004, opacity: 0 },
 	{ shiftYEm: -2.1, scale: 1.004, opacity: 0 },
 	{ shiftYEm: -2.3, scale: 1.004, opacity: 0 },
+	{ shiftYEm: -2.4, scale: 1.004, opacity: 0 },
+	{ shiftYEm: -2.5, scale: 1.004, opacity: 0 },
+	{ shiftYEm: -2.6, scale: 1.004, opacity: 0 },
 ];

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LAST_FRAME, PLATE_SIZE, SECTION3_START_FRAME } from './canyonPlates';
+import { LAST_FRAME, PLATE_SIZE, SECTION3_START_FRAME, SECTION4_DWELL, SECTION4_START_FRAME } from './canyonPlates';
 import {
 	chooseLayout,
 	CONNECTIONS,
@@ -23,7 +23,7 @@ import {
 
 const F_START = SECTION3_START_FRAME;
 const F9 = SECTION3_START_FRAME + 1;
-const F10 = LAST_FRAME;
+const F10 = SECTION4_START_FRAME;
 const GRID = Array.from({ length: 301 }, (_, i) => F_START - 0.5 + (i / 300) * (F10 - F_START + 0.5));
 
 describe('data', () => {
@@ -251,7 +251,23 @@ describe('growthStateAt — choreography', () => {
 		}
 	});
 
+	it('holds the finished system for a dwell before section 4 starts', () => {
+		const s = growthStateAt(F10 + SECTION4_DWELL * 0.9);
+		expect(s.presence).toBe(1);
+		expect(s.interactive).toBe(true);
+		expect(sceneAmountAt(F10 + SECTION4_DWELL * 0.9)).toBe(1);
+	});
+
+	it('exits as the search landscape (section 4) begins', () => {
+		const after = growthStateAt(GROWTH.EXIT[1]);
+		expect(after.presence).toBe(0);
+		expect(after.interactive).toBe(false);
+		expect(sceneAmountAt(GROWTH.EXIT[1])).toBe(0);
+		expect(GROWTH.EXIT[0]).toBeGreaterThanOrEqual(F10);
+		expect(growthStateAt(F10).presence).toBe(1);
+	});
+
 	it('clamps beyond the last frame', () => {
-		expect(growthStateAt(99)).toEqual(growthStateAt(F10));
+		expect(growthStateAt(99)).toEqual(growthStateAt(LAST_FRAME));
 	});
 });

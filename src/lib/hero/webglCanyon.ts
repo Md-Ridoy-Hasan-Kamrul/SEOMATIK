@@ -198,7 +198,7 @@ export function createCanyonRenderer(canvas: HTMLCanvasElement): CanyonRenderer 
 		gl!.uniform1f(u.uPush, reducedMotion || target === from ? 1 : cameraPushAt(pos));
 		gl!.uniform1f(u.uWarp, reducedMotion ? 0 : warpAt(pos));
 		gl!.uniform1f(u.uEmergeOn, emerging ? 1 : 0);
-		gl!.uniform1f(u.uMaskMix, from >= PLATE9 ? crossfadeAt(pos) : 0);
+		gl!.uniform1f(u.uMaskMix, from === PLATE9 ? crossfadeAt(pos) : from > PLATE9 ? 1 : 0);
 	}
 
 	function setGrowth(g: GrowthFrame): void {

@@ -4,7 +4,7 @@
  * Picture10 (active) in design px of the 1352×968 page; headline poses are
  * offsets from the page centre (x) and cap-centre rows (y), like section 2.
  */
-import { LAST_FRAME, PLATE_SIZE, SECTION3_START_FRAME } from './canyonPlates';
+import { LAST_FRAME, PLATE_SIZE, SECTION3_START_FRAME, SECTION4_DWELL, SECTION4_START_FRAME } from './canyonPlates';
 import { clamp01, lerp, normalize, smoothstep } from './intro';
 import type { LinePose } from './revealTimeline';
 
@@ -156,6 +156,8 @@ export const GROWTH = {
 	STATEMENT: [S + 1.84, S + 1.97] as Window,
 	CTA: [S + 1.88, S + 2] as Window,
 	INTERACTIVE_FROM: S + 1.98,
+	/** The system lifts away as the New Search Landscape (section 4) dissolves in. */
+	EXIT: [SECTION4_START_FRAME + SECTION4_DWELL, SECTION4_START_FRAME + SECTION4_DWELL + 0.25] as Window,
 } as const;
 
 type PerDiscipline = Record<DisciplineKey, number>;
@@ -225,7 +227,7 @@ function connectionAt(f: number, i: number): number {
 export function growthStateAt(framePos: number): GrowthState {
 	const f = Math.min(Math.max(framePos, 0), LAST_FRAME);
 	return {
-		presence: p(f, GROWTH.PRESENCE),
+		presence: p(f, GROWTH.PRESENCE) * (1 - p(f, GROWTH.EXIT)),
 		kicker: kickerAt(f),
 		title9: eased(f, GROWTH.TITLE9_IN) * (1 - eased(f, GROWTH.TITLE9_OUT)),
 		title10: eased(f, GROWTH.TITLE10_IN),
@@ -238,7 +240,7 @@ export function growthStateAt(framePos: number): GrowthState {
 		connections: perDiscipline((i) => connectionAt(f, i)),
 		statement: eased(f, GROWTH.STATEMENT),
 		cta: eased(f, GROWTH.CTA),
-		interactive: f >= GROWTH.INTERACTIVE_FROM,
+		interactive: f >= GROWTH.INTERACTIVE_FROM && f <= GROWTH.EXIT[0],
 	};
 }
 
@@ -343,7 +345,8 @@ export function chooseLayout(viewW: number, viewH: number): GrowthLayout {
 
 /** 0 → 1 as the background changes from frame 8 to the Growth System plates. */
 export function sceneAmountAt(framePos: number): number {
-	if (framePos >= S + 1) return 1;
+	const exit = 1 - smoothstep(normalize(framePos, GROWTH.EXIT[0], GROWTH.EXIT[1]));
+	if (framePos >= S + 1) return exit;
 	return smoothstep(normalize(framePos, S, S + GROWTH.SCENE_IN));
 }
 

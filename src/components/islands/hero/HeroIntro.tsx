@@ -1,10 +1,11 @@
 import { type CSSProperties, type RefObject, useRef } from 'react';
 import '@fontsource/gilda-display/400.css';
-import { CANYON_PLATES, PLATE_SIZE, WORDMARK_LETTER_CENTERS_EM } from '../../../lib/hero/canyonPlates';
-import { SCROLL } from '../../../lib/hero/canyonMorph';
+import { CANYON_PLATES, LAST_FRAME, PLATE_SIZE, SECTION4_START_FRAME, WORDMARK_LETTER_CENTERS_EM } from '../../../lib/hero/canyonPlates';
+import { frameAnchorVh, SCROLL } from '../../../lib/hero/canyonMorph';
 import { INTRO, type IntroLevels } from '../../../lib/hero/introTimeline';
 import { CanyonReveal } from './CanyonReveal';
 import { GrowthSystem } from './GrowthSystem';
+import { SearchLandscape } from './SearchLandscape';
 import { HeroNav } from './HeroNav';
 import { HERO_BRAND, HERO_BRANDLINE } from './navItems';
 import { useCanyonScene } from './useCanyonScene';
@@ -14,8 +15,11 @@ import { useStartSignal } from './useStartSignal';
 import './hero-intro.css';
 
 const NO_SCRIPT_CSS = '.hero-wordmark,.hero-nav,.hero-tagline,.hero__plates,.hero__plates img:first-child{opacity:1}';
-/** Scroll offset (vh into the track) where the Growth System (section 3) has settled on Picture10. */
-const GROWTH_ANCHOR_VH = SCROLL.HOLD_END * (SCROLL.TRACK_VH - 100);
+/** In-page anchors: nav "Growth" lands on the settled Growth System, "Sichtbarkeit" on the search landscape. */
+const ANCHORS = [
+	{ id: 'growth', vh: frameAnchorVh(SECTION4_START_FRAME) },
+	{ id: 'sichtbarkeit', vh: frameAnchorVh(LAST_FRAME) },
+] as const;
 
 function useHeroRefs() {
 	return {
@@ -29,6 +33,7 @@ function useHeroRefs() {
 		navRef: useRef<HTMLElement>(null),
 		taglineRef: useRef<HTMLParagraphElement>(null),
 		growthRef: useRef<HTMLElement>(null),
+		searchRef: useRef<HTMLElement>(null),
 	};
 }
 
@@ -108,8 +113,11 @@ export default function HeroIntro() {
 				</section>
 				<CanyonReveal />
 				<GrowthSystem rootRef={refs.growthRef} />
+				<SearchLandscape rootRef={refs.searchRef} />
 			</div>
-			<span id="growth" className="hero__anchor" style={{ top: `${GROWTH_ANCHOR_VH}vh` }} aria-hidden="true" />
+			{ANCHORS.map((a) => (
+				<span key={a.id} id={a.id} className="hero__anchor" style={{ top: `${a.vh}vh` }} aria-hidden="true" />
+			))}
 			<noscript dangerouslySetInnerHTML={{ __html: `<style>${NO_SCRIPT_CSS}</style>` }} />
 		</div>
 	);

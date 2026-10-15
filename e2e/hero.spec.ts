@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { SCROLL } from '../src/lib/hero/canyonMorph';
-import { LAST_FRAME, SECTION3_START_FRAME } from '../src/lib/hero/canyonPlates';
+import { LAST_FRAME, SECTION3_START_FRAME, SECTION4_START_FRAME } from '../src/lib/hero/canyonPlates';
 
 /** Intro + scroll contract for the canyon hero (`HeroIntro` island). */
 // Headless WebGL renders in software; under parallel workers the 7 s intro can stretch.
@@ -9,7 +9,7 @@ const hero = (page: Page) => page.locator('[data-hero]');
 const opacityOf = (page: Page, selector: string) =>
 	page.locator(selector).evaluate((el) => Number(getComputedStyle(el).opacity));
 
-/** Scroll so the hero settles on a given frame position (0 = Picture1 … LAST_FRAME = Picture10). */
+/** Scroll so the hero settles on a given frame position (0 = Picture1 … LAST_FRAME = Picture13). */
 async function scrollToFrame(page: Page, frame: number) {
 	await page.evaluate(
 		([f, start, end, last]) => {
@@ -75,7 +75,7 @@ test.describe('canyon hero', () => {
 		await page.goto('/');
 		await expect(hero(page)).toHaveAttribute('data-intro', 'done', { timeout: INTRO_TIMEOUT_MS });
 		await page.evaluate(() => document.getElementById('growth')?.scrollIntoView());
-		await expect(hero(page)).toHaveAttribute('data-frame', String(LAST_FRAME), { timeout: 6_000 });
+		await expect(hero(page)).toHaveAttribute('data-frame', String(SECTION4_START_FRAME), { timeout: 6_000 });
 	});
 
 	test('reduced motion still shows the full brand entrance', async ({ browser }) => {
@@ -102,8 +102,8 @@ test.describe('canyon hero', () => {
 	test('section 3: Picture10 shows the full system, statement and CTA', async ({ page }) => {
 		await page.goto('/');
 		await expect(hero(page)).toHaveAttribute('data-intro', 'done', { timeout: INTRO_TIMEOUT_MS });
-		await scrollThroughHero(page);
-		await expect(hero(page)).toHaveAttribute('data-frame', String(LAST_FRAME), { timeout: 6_000 });
+		await scrollToFrame(page, SECTION4_START_FRAME);
+		await expect(hero(page)).toHaveAttribute('data-frame', String(SECTION4_START_FRAME), { timeout: 6_000 });
 		await expect(page.locator('.hero__stage')).toHaveAttribute('data-gs-live', '', { timeout: 4_000 });
 		await expect(page.getByRole('heading', { level: 2, name: /Strategy at the core/i })).toBeAttached();
 		await expect(page.getByRole('list', { name: 'Disziplinen rund um Strategy' }).getByRole('listitem')).toHaveCount(7);
@@ -115,7 +115,7 @@ test.describe('canyon hero', () => {
 	test('section 3: focusing or hovering a specialist highlights it and its connections', async ({ page }) => {
 		await page.goto('/');
 		await expect(hero(page)).toHaveAttribute('data-intro', 'done', { timeout: INTRO_TIMEOUT_MS });
-		await scrollThroughHero(page);
+		await scrollToFrame(page, SECTION4_START_FRAME);
 		await expect(page.locator('.hero__stage')).toHaveAttribute('data-gs-live', '', { timeout: 8_000 });
 		await page.locator('.gs__node[data-key="seo"]').focus();
 		await expect(page.locator('.gs__node[data-key="seo"]')).toHaveAttribute('data-hot', '');
@@ -125,6 +125,69 @@ test.describe('canyon hero', () => {
 		await page.locator('.gs__node[data-key="design"] .gs__name').hover();
 		await expect(page.locator('.gs__node[data-key="design"]')).toHaveAttribute('data-hot', '');
 	});
+
+	test('section 4: SEO and SEA first, GEO/GEA only as ghosts (Picture11)', async ({ page }) => {
+		await page.goto('/');
+		await expect(hero(page)).toHaveAttribute('data-intro', 'done', { timeout: INTRO_TIMEOUT_MS });
+		await scrollToFrame(page, SECTION4_START_FRAME + 1);
+		await expect(hero(page)).toHaveAttribute('data-frame', String(SECTION4_START_FRAME + 1), { timeout: 6_000 });
+		await expect.poll(() => opacityOf(page, '.gs'), { timeout: 4_000 }).toBe(0);
+		await expect.poll(() => opacityOf(page, '.sl__item[data-key="sea"] .sl__frame'), { timeout: 4_000 }).toBe(1);
+		expect(await opacityOf(page, '.sl__item[data-key="geo"] .sl__frame')).toBe(0);
+		expect(await opacityOf(page, '.sl__item[data-key="geo"] .sl__panel')).toBeGreaterThan(0);
+	});
+
+	test('section 4: all four realms connected, then one ribbon and the CTA (Picture12/13)', async ({ page }) => {
+		await page.goto('/');
+		await expect(hero(page)).toHaveAttribute('data-intro', 'done', { timeout: INTRO_TIMEOUT_MS });
+		await scrollToFrame(page, SECTION4_START_FRAME + 2);
+		await expect(hero(page)).toHaveAttribute('data-frame', String(SECTION4_START_FRAME + 2), { timeout: 6_000 });
+		await expect(page.getByRole('heading', { level: 2, name: /Search has changed/i })).toBeVisible();
+		await expect(page.getByRole('list', { name: 'Die vier Suchwelten' }).getByRole('listitem')).toHaveCount(4);
+		await expect.poll(() => page.locator('.sl__strand').evaluateAll((els) => els.every((el) => getComputedStyle(el).getPropertyValue('--draw').trim() === '' || Number(getComputedStyle(el).getPropertyValue('--draw')) === 1)), { timeout: 4_000 }).toBe(true);
+		await scrollThroughHero(page);
+		await expect(hero(page)).toHaveAttribute('data-frame', String(LAST_FRAME), { timeout: 6_000 });
+		await expect(page.getByRole('link', { name: /Explore Search Solutions/ })).toBeVisible();
+		await expect.poll(() => page.locator('.sl__ribbon').evaluate((el) => Number(getComputedStyle(el).getPropertyValue('--draw'))), { timeout: 4_000 }).toBe(1);
+	});
+
+	test('section 4: focusing a realm lifts it forward and reveals its information', async ({ page }) => {
+		await page.goto('/');
+		await expect(hero(page)).toHaveAttribute('data-intro', 'done', { timeout: INTRO_TIMEOUT_MS });
+		await scrollThroughHero(page);
+		await expect(page.locator('.hero__stage')).toHaveAttribute('data-sl-live', '', { timeout: 8_000 });
+		const geo = page.locator('.sl__item[data-key="geo"]');
+		await geo.focus();
+		await expect(geo.locator('.sl__info')).toBeVisible();
+		await expect(geo.locator('.sl__info')).toContainText('generativen Antworten');
+		await expect.poll(() => geo.locator('.sl__lift').evaluate((el) => getComputedStyle(el).scale)).not.toBe('none');
+	});
+
+	test('the nav "Sichtbarkeit" link lands on the search landscape', async ({ page }) => {
+		await page.goto('/');
+		await expect(hero(page)).toHaveAttribute('data-intro', 'done', { timeout: INTRO_TIMEOUT_MS });
+		await page.evaluate(() => document.getElementById('sichtbarkeit')?.scrollIntoView());
+		await expect(hero(page)).toHaveAttribute('data-frame', String(LAST_FRAME), { timeout: 6_000 });
+	});
+
+	for (const width of [1440, 1020, 768, 425, 375, 320]) {
+		test(`section 4 cards stay inside the viewport at ${width}px`, async ({ browser }) => {
+			const context = await browser.newContext({ viewport: { width, height: 800 } });
+			const page = await context.newPage();
+			await page.goto('/');
+			await expect(hero(page)).toHaveAttribute('data-intro', 'done', { timeout: INTRO_TIMEOUT_MS });
+			await scrollThroughHero(page);
+			await expect(hero(page)).toHaveAttribute('data-frame', String(LAST_FRAME), { timeout: 6_000 });
+			await page.waitForTimeout(600);
+			for (const key of ['seo', 'sea', 'geo', 'gea']) {
+				const box = await page.locator(`.sl__item[data-key="${key}"] .sl__panel`).boundingBox();
+				expect(box, key).not.toBeNull();
+				expect(box!.x, key).toBeGreaterThanOrEqual(0);
+				expect(box!.x + box!.width, key).toBeLessThanOrEqual(width + 1);
+			}
+			await context.close();
+		});
+	}
 
 	for (const width of [1440, 1020, 768, 425, 375, 320]) {
 		test(`wordmark stays on one line inside the viewport at ${width}px`, async ({ browser }) => {

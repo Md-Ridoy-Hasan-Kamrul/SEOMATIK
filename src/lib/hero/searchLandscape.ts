@@ -3,7 +3,7 @@
  * GEO, GEA) live as DOM over the cleaned plates of Picture11–13. Every quad
  * and connection path is measured on those frames in design px (1352×968).
  */
-import { LAST_FRAME, PLATE_SIZE, SECTION4_DWELL, SECTION4_START_FRAME } from './canyonPlates';
+import { LAST_FRAME, PLATE_SIZE, SECTION4_DWELL, SECTION4_START_FRAME, SECTION5_DWELL, SECTION5_START_FRAME } from './canyonPlates';
 import { lerp, normalize, smoothstep } from './intro';
 import type { Point } from './growthSystem';
 import { sceneToScreen, sceneView } from './growthSystem';
@@ -153,6 +153,8 @@ export const SEARCH = {
 	RIBBON_DRAW: [F12 + 0.05, F12 + 0.45] as Window,
 	STRANDS_OUT: [F12 + 0.15, F12 + 0.45] as Window,
 	CTA_IN: [F12 + 0.5, F12 + 0.8] as Window,
+	/** The landscape lifts away as AI Tech (section 5) begins, after the Picture13 dwell. */
+	EXIT: [SECTION5_START_FRAME + SECTION5_DWELL, SECTION5_START_FRAME + SECTION5_DWELL + 0.25] as Window,
 } as const;
 
 export interface PanelState {
@@ -197,7 +199,7 @@ function panelsAt(f: number): Record<SearchKey, PanelState> {
 export function searchStateAt(framePos: number): SearchState {
 	const f = Math.min(Math.max(framePos, 0), LAST_FRAME);
 	return {
-		presence: p(f, SEARCH.PRESENCE),
+		presence: p(f, SEARCH.PRESENCE) * (1 - p(f, SEARCH.EXIT)),
 		kicker: eased(f, SEARCH.KICKER_IN),
 		title: eased(f, SEARCH.TITLE_IN),
 		sub: eased(f, SEARCH.SUB_IN),
@@ -207,7 +209,7 @@ export function searchStateAt(framePos: number): SearchState {
 		strandsAlpha: 1 - eased(f, SEARCH.STRANDS_OUT),
 		ribbon: p(f, SEARCH.RIBBON_DRAW),
 		cta: eased(f, SEARCH.CTA_IN),
-		interactive: f >= SEARCH.INTERACTIVE_FROM,
+		interactive: f >= SEARCH.INTERACTIVE_FROM && f <= SEARCH.EXIT[0],
 	};
 }
 
@@ -218,7 +220,7 @@ function lerpQuad(a: Quad, b: Quad, t: number): Quad {
 /** Panel pose at a frame position; GEO/GEA move from ghost to panel by `grow`, not by scroll segment. */
 export function panelQuadAt(panel: SearchPanel, framePos: number, grow: number): Quad {
 	const { f11, f12, f13 } = panel.frames;
-	if (framePos >= F12) return lerpQuad(f12, f13, smoothstep(normalize(framePos, F12, LAST_FRAME)));
+	if (framePos >= F12) return lerpQuad(f12, f13, smoothstep(normalize(framePos, F12, SECTION5_START_FRAME)));
 	if (framePos <= F11) return f11;
 	const expands = panel.key === 'geo' || panel.key === 'gea';
 	return lerpQuad(f11, f12, expands ? grow : smoothstep(framePos - F11));

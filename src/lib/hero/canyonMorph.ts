@@ -10,6 +10,8 @@ import {
 	SECTION3_START_FRAME,
 	SECTION4_DWELL,
 	SECTION4_START_FRAME,
+	SECTION5_DWELL,
+	SECTION5_START_FRAME,
 	WORDMARK_FADE_OUT_END,
 	WORDMARK_POSES,
 } from './canyonPlates';
@@ -17,8 +19,8 @@ import type { EdgeCurve, WordmarkPose } from './canyonPlates';
 import { clamp01, lerp, normalize, smoothstep } from './intro';
 
 export const SCROLL = {
-	/** Track height in vh: one sticky screen + the scrub distance for frames 1→13. */
-	TRACK_VH: 1220,
+	/** Track height in vh: one sticky screen + the scrub distance for frames 1→15. */
+	TRACK_VH: 1420,
 	/** Progress kept on frame 1 before the canyon starts to open. */
 	HOLD_START: 0.03,
 	/** Progress at which the last frame is reached; the rest of the track holds the final layout. */
@@ -34,6 +36,8 @@ export const CAMERA = {
 	PARALLAX_MAX: 0.006,
 	/** Section 3 plate changes finish this far into their segment, leaving room for the reveal. */
 	S3_DISSOLVE_END: 0.45,
+	/** Picture14 → Picture15 changes while the modules travel to the core (segment fractions). */
+	S5_ARRANGE_DISSOLVE: [0.08, 0.55] as const,
 } as const;
 
 export interface FrameSegment {
@@ -133,6 +137,8 @@ export function wordmarkPoseAt(framePos: number): WordmarkPose {
 function dissolveT(framePos: number): { from: number; t: number } {
 	const { from, t } = frameSegment(framePos);
 	if (from === SECTION4_START_FRAME) return { from, t: normalize(t, SECTION4_DWELL, SECTION4_DWELL + CAMERA.S3_DISSOLVE_END) };
+	if (from === SECTION5_START_FRAME) return { from, t: normalize(t, SECTION5_DWELL, SECTION5_DWELL + CAMERA.S3_DISSOLVE_END) };
+	if (from === SECTION5_START_FRAME + 1) return { from, t: normalize(t, ...CAMERA.S5_ARRANGE_DISSOLVE) };
 	return { from, t: from >= SECTION3_START_FRAME ? normalize(t, 0, CAMERA.S3_DISSOLVE_END) : t };
 }
 

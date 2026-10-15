@@ -35,6 +35,9 @@ export const CANYON_PLATES: readonly CanyonPlate[] = [
 	{ src: '/assets/hero/plates/plate-11.webp', left: [0.23587, 0.02876, -0.25176], right: [0.97233, -0.14045, 0.06012] },
 	{ src: '/assets/hero/plates/plate-12.webp', left: [0.23587, 0.02876, -0.25176], right: [0.97233, -0.14045, 0.06012] },
 	{ src: '/assets/hero/plates/plate-13.webp', left: [0.23587, 0.02876, -0.25176], right: [0.97233, -0.14045, 0.06012] },
+	// Section 5 (AI Tech): modules, core label and connections are live DOM over these plates.
+	{ src: '/assets/hero/plates/plate-14.webp', left: [0.23587, 0.02876, -0.25176], right: [0.97233, -0.14045, 0.06012] },
+	{ src: '/assets/hero/plates/plate-15.webp', left: [0.23587, 0.02876, -0.25176], right: [0.97233, -0.14045, 0.06012] },
 ];
 
 export const LAST_FRAME = CANYON_PLATES.length - 1;
@@ -50,6 +53,12 @@ export const SECTION4_START_FRAME = 9;
 
 /** Frames the finished Growth System stays on screen (and interactive) before section 4 begins. */
 export const SECTION4_DWELL = 0.2;
+
+/** Frame index of Picture13: the Search Landscape is complete and AI Tech begins. */
+export const SECTION5_START_FRAME = 12;
+
+/** Frames the finished Search Landscape stays on screen (and interactive) before AI Tech begins. */
+export const SECTION5_DWELL = 0.2;
 
 /** Section 3 extras: plate 9 without the seven specialist rocks (they rise in) and per-rock masks. */
 export const GROWTH_ASSETS = {
@@ -99,4 +108,6 @@ export const WORDMARK_POSES: readonly WordmarkPose[] = [
 	{ shiftYEm: -2.4, scale: 1.004, opacity: 0 },
 	{ shiftYEm: -2.5, scale: 1.004, opacity: 0 },
 	{ shiftYEm: -2.6, scale: 1.004, opacity: 0 },
+	{ shiftYEm: -2.7, scale: 1.004, opacity: 0 },
+	{ shiftYEm: -2.8, scale: 1.004, opacity: 0 },
 ];

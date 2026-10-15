@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LAST_FRAME, PLATE_SIZE, SECTION4_DWELL, SECTION4_START_FRAME } from './canyonPlates';
+import { LAST_FRAME, PLATE_SIZE, SECTION4_DWELL, SECTION4_START_FRAME, SECTION5_DWELL, SECTION5_START_FRAME } from './canyonPlates';
 import {
 	applyHomography,
 	gridQuads,
@@ -20,7 +20,7 @@ import {
 const S4 = SECTION4_START_FRAME;
 const F11 = S4 + 1;
 const F12 = S4 + 2;
-const F13 = LAST_FRAME;
+const F13 = SECTION5_START_FRAME;
 const GRID = Array.from({ length: 401 }, (_, i) => S4 - 0.3 + (i / 400) * (F13 - S4 + 0.3));
 const keys = SEARCH_PANELS.map((p) => p.key);
 
@@ -187,8 +187,18 @@ describe('searchStateAt — choreography', () => {
 		}
 	});
 
+	it('holds Picture13 for a dwell, then exits as AI Tech (section 5) begins', () => {
+		const held = searchStateAt(F13 + SECTION5_DWELL * 0.9);
+		expect(held.presence).toBe(1);
+		expect(held.interactive).toBe(true);
+		const gone = searchStateAt(SEARCH.EXIT[1]);
+		expect(gone.presence).toBe(0);
+		expect(gone.interactive).toBe(false);
+		expect(SEARCH.EXIT[0]).toBeCloseTo(F13 + SECTION5_DWELL, 10);
+	});
+
 	it('clamps beyond the last frame', () => {
-		expect(searchStateAt(99)).toEqual(searchStateAt(F13));
+		expect(searchStateAt(99)).toEqual(searchStateAt(LAST_FRAME));
 	});
 });
 

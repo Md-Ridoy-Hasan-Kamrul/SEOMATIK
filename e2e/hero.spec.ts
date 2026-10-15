@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { SCROLL } from '../src/lib/hero/canyonMorph';
-import { LAST_FRAME, SECTION3_START_FRAME, SECTION4_START_FRAME } from '../src/lib/hero/canyonPlates';
+import { LAST_FRAME, SECTION3_START_FRAME, SECTION4_START_FRAME, SECTION5_START_FRAME } from '../src/lib/hero/canyonPlates';
 
 /** Intro + scroll contract for the canyon hero (`HeroIntro` island). */
 // Headless WebGL renders in software; under parallel workers the 7 s intro can stretch.
@@ -9,7 +9,7 @@ const hero = (page: Page) => page.locator('[data-hero]');
 const opacityOf = (page: Page, selector: string) =>
 	page.locator(selector).evaluate((el) => Number(getComputedStyle(el).opacity));
 
-/** Scroll so the hero settles on a given frame position (0 = Picture1 … LAST_FRAME = Picture13). */
+/** Scroll so the hero settles on a given frame position (0 = Picture1 … LAST_FRAME = Picture15). */
 async function scrollToFrame(page: Page, frame: number) {
 	await page.evaluate(
 		([f, start, end, last]) => {
@@ -145,8 +145,8 @@ test.describe('canyon hero', () => {
 		await expect(page.getByRole('heading', { level: 2, name: /Search has changed/i })).toBeVisible();
 		await expect(page.getByRole('list', { name: 'Die vier Suchwelten' }).getByRole('listitem')).toHaveCount(4);
 		await expect.poll(() => page.locator('.sl__strand').evaluateAll((els) => els.every((el) => getComputedStyle(el).getPropertyValue('--draw').trim() === '' || Number(getComputedStyle(el).getPropertyValue('--draw')) === 1)), { timeout: 4_000 }).toBe(true);
-		await scrollThroughHero(page);
-		await expect(hero(page)).toHaveAttribute('data-frame', String(LAST_FRAME), { timeout: 6_000 });
+		await scrollToFrame(page, SECTION5_START_FRAME);
+		await expect(hero(page)).toHaveAttribute('data-frame', String(SECTION5_START_FRAME), { timeout: 6_000 });
 		await expect(page.getByRole('link', { name: /Explore Search Solutions/ })).toBeVisible();
 		await expect.poll(() => page.locator('.sl__ribbon').evaluate((el) => Number(getComputedStyle(el).getPropertyValue('--draw'))), { timeout: 4_000 }).toBe(1);
 	});
@@ -154,7 +154,7 @@ test.describe('canyon hero', () => {
 	test('section 4: focusing a realm lifts it forward and reveals its information', async ({ page }) => {
 		await page.goto('/');
 		await expect(hero(page)).toHaveAttribute('data-intro', 'done', { timeout: INTRO_TIMEOUT_MS });
-		await scrollThroughHero(page);
+		await scrollToFrame(page, SECTION5_START_FRAME);
 		await expect(page.locator('.hero__stage')).toHaveAttribute('data-sl-live', '', { timeout: 8_000 });
 		const geo = page.locator('.sl__item[data-key="geo"]');
 		await geo.focus();
@@ -167,8 +167,61 @@ test.describe('canyon hero', () => {
 		await page.goto('/');
 		await expect(hero(page)).toHaveAttribute('data-intro', 'done', { timeout: INTRO_TIMEOUT_MS });
 		await page.evaluate(() => document.getElementById('sichtbarkeit')?.scrollIntoView());
-		await expect(hero(page)).toHaveAttribute('data-frame', String(LAST_FRAME), { timeout: 6_000 });
+		await expect(hero(page)).toHaveAttribute('data-frame', String(SECTION5_START_FRAME), { timeout: 6_000 });
 	});
+
+	test('section 5: three modules rise out of the canyon first (Picture14)', async ({ page }) => {
+		await page.goto('/');
+		await expect(hero(page)).toHaveAttribute('data-intro', 'done', { timeout: INTRO_TIMEOUT_MS });
+		await scrollToFrame(page, SECTION5_START_FRAME + 1);
+		await expect(hero(page)).toHaveAttribute('data-frame', String(SECTION5_START_FRAME + 1), { timeout: 6_000 });
+		await expect.poll(() => opacityOf(page, '.sl'), { timeout: 4_000 }).toBe(0);
+		await expect.poll(() => opacityOf(page, '.ai__item[data-key="automation"] .ai__card--emerge'), { timeout: 4_000 }).toBe(1);
+		expect(await opacityOf(page, '.ai__item[data-key="agents"] .ai__card--orbit')).toBe(0);
+		await expect(page.getByRole('heading', { level: 2, name: /AI that works for business/i })).toBeVisible();
+	});
+
+	test('section 5: six modules around the core, connected, with CTA (Picture15)', async ({ page }) => {
+		await page.goto('/');
+		await expect(hero(page)).toHaveAttribute('data-intro', 'done', { timeout: INTRO_TIMEOUT_MS });
+		await scrollThroughHero(page);
+		await expect(hero(page)).toHaveAttribute('data-frame', String(LAST_FRAME), { timeout: 6_000 });
+		await expect(page.getByRole('list', { name: 'SEOMATIK AI-Leistungen' }).getByRole('listitem')).toHaveCount(6);
+		await expect(page.getByRole('link', { name: /Explore AI Tech/ })).toBeVisible();
+		await expect.poll(() => page.locator('.ai__link').evaluateAll((els) => els.every((el) => Number(getComputedStyle(el).getPropertyValue('--draw')) === 1)), { timeout: 4_000 }).toBe(true);
+		await expect.poll(() => opacityOf(page, '.ai__item[data-key="agents"] .ai__card--orbit'), { timeout: 4_000 }).toBe(1);
+	});
+
+	test('section 5: focusing a module reveals its description', async ({ page }) => {
+		await page.goto('/');
+		await expect(hero(page)).toHaveAttribute('data-intro', 'done', { timeout: INTRO_TIMEOUT_MS });
+		await scrollThroughHero(page);
+		await expect(page.locator('.hero__stage')).toHaveAttribute('data-ai-live', '', { timeout: 8_000 });
+		const knowledge = page.locator('.ai__item[data-key="knowledge"]');
+		await knowledge.focus();
+		await expect(knowledge.locator('.ai__info')).toBeVisible();
+		await expect(knowledge.locator('.ai__info')).toContainText('Unternehmenswissen');
+	});
+
+	for (const width of [1440, 1020, 768, 425, 375, 320]) {
+		test(`section 5 modules stay inside the viewport at ${width}px`, async ({ browser }) => {
+			const context = await browser.newContext({ viewport: { width, height: 800 } });
+			const page = await context.newPage();
+			await page.goto('/');
+			await expect(hero(page)).toHaveAttribute('data-intro', 'done', { timeout: INTRO_TIMEOUT_MS });
+			await scrollThroughHero(page);
+			await expect(hero(page)).toHaveAttribute('data-frame', String(LAST_FRAME), { timeout: 6_000 });
+			await page.waitForTimeout(600);
+			for (const key of ['consulting', 'training', 'automation', 'agents', 'knowledge', 'workflows']) {
+				const box = await page.locator(`.ai__item[data-key="${key}"] .ai__card--orbit`).boundingBox();
+				expect(box, key).not.toBeNull();
+				expect(box!.x, key).toBeGreaterThanOrEqual(0);
+				expect(box!.x + box!.width, key).toBeLessThanOrEqual(width + 1);
+				expect(box!.y + box!.height, key).toBeLessThanOrEqual(800);
+			}
+			await context.close();
+		});
+	}
 
 	for (const width of [1440, 1020, 768, 425, 375, 320]) {
 		test(`section 4 cards stay inside the viewport at ${width}px`, async ({ browser }) => {
@@ -176,8 +229,8 @@ test.describe('canyon hero', () => {
 			const page = await context.newPage();
 			await page.goto('/');
 			await expect(hero(page)).toHaveAttribute('data-intro', 'done', { timeout: INTRO_TIMEOUT_MS });
-			await scrollThroughHero(page);
-			await expect(hero(page)).toHaveAttribute('data-frame', String(LAST_FRAME), { timeout: 6_000 });
+			await scrollToFrame(page, SECTION5_START_FRAME);
+			await expect(hero(page)).toHaveAttribute('data-frame', String(SECTION5_START_FRAME), { timeout: 6_000 });
 			await page.waitForTimeout(600);
 			for (const key of ['seo', 'sea', 'geo', 'gea']) {
 				const box = await page.locator(`.sl__item[data-key="${key}"] .sl__panel`).boundingBox();

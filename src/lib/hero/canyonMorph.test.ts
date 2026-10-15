@@ -7,6 +7,8 @@ import {
 	SECTION3_START_FRAME,
 	SECTION4_DWELL,
 	SECTION4_START_FRAME,
+	SECTION5_DWELL,
+	SECTION5_START_FRAME,
 	WORDMARK_FADE_OUT_END,
 	WORDMARK_POSES,
 } from './canyonPlates';
@@ -207,6 +209,19 @@ describe('section 4 dissolve', () => {
 	it('keeps Picture10 on screen during the dwell, then changes plates', () => {
 		expect(crossfadeAt(SECTION4_START_FRAME + SECTION4_DWELL)).toBe(0);
 		expect(crossfadeAt(SECTION4_START_FRAME + 0.9)).toBe(1);
+	});
+});
+
+describe('section 5 dissolves', () => {
+	it('keeps Picture13 during its dwell, then changes to Picture14', () => {
+		expect(crossfadeAt(SECTION5_START_FRAME + SECTION5_DWELL)).toBe(0);
+		expect(crossfadeAt(SECTION5_START_FRAME + 0.9)).toBe(1);
+	});
+
+	it('changes Picture14 to Picture15 while the modules travel to the core', () => {
+		const [a, b] = CAMERA.S5_ARRANGE_DISSOLVE;
+		expect(crossfadeAt(SECTION5_START_FRAME + 1 + a)).toBeCloseTo(0, 10);
+		expect(crossfadeAt(SECTION5_START_FRAME + 1 + b)).toBeCloseTo(1, 10);
 	});
 });
 

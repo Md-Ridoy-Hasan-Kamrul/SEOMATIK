@@ -1,11 +1,12 @@
 import { type CSSProperties, type RefObject, useRef } from 'react';
 import '@fontsource/gilda-display/400.css';
-import { CANYON_PLATES, LAST_FRAME, PLATE_SIZE, SECTION4_START_FRAME, WORDMARK_LETTER_CENTERS_EM } from '../../../lib/hero/canyonPlates';
+import { CANYON_PLATES, LAST_FRAME, PLATE_SIZE, SECTION4_START_FRAME, SECTION5_START_FRAME, WORDMARK_LETTER_CENTERS_EM } from '../../../lib/hero/canyonPlates';
 import { frameAnchorVh, SCROLL } from '../../../lib/hero/canyonMorph';
 import { INTRO, type IntroLevels } from '../../../lib/hero/introTimeline';
 import { CanyonReveal } from './CanyonReveal';
 import { GrowthSystem } from './GrowthSystem';
 import { SearchLandscape } from './SearchLandscape';
+import { AiTech } from './AiTech';
 import { HeroNav } from './HeroNav';
 import { HERO_BRAND, HERO_BRANDLINE } from './navItems';
 import { useCanyonScene } from './useCanyonScene';
@@ -15,10 +16,11 @@ import { useStartSignal } from './useStartSignal';
 import './hero-intro.css';
 
 const NO_SCRIPT_CSS = '.hero-wordmark,.hero-nav,.hero-tagline,.hero__plates,.hero__plates img:first-child{opacity:1}';
-/** In-page anchors: nav "Growth" lands on the settled Growth System, "Sichtbarkeit" on the search landscape. */
+/** In-page anchors: nav "Growth" → Growth System, "Sichtbarkeit" → search landscape, #ai-tech → AI Tech. */
 const ANCHORS = [
 	{ id: 'growth', vh: frameAnchorVh(SECTION4_START_FRAME) },
-	{ id: 'sichtbarkeit', vh: frameAnchorVh(LAST_FRAME) },
+	{ id: 'sichtbarkeit', vh: frameAnchorVh(SECTION5_START_FRAME) },
+	{ id: 'ai-tech', vh: frameAnchorVh(LAST_FRAME) },
 ] as const;
 
 function useHeroRefs() {
@@ -34,6 +36,7 @@ function useHeroRefs() {
 		taglineRef: useRef<HTMLParagraphElement>(null),
 		growthRef: useRef<HTMLElement>(null),
 		searchRef: useRef<HTMLElement>(null),
+		aiRef: useRef<HTMLElement>(null),
 	};
 }
 
@@ -114,6 +117,7 @@ export default function HeroIntro() {
 				<CanyonReveal />
 				<GrowthSystem rootRef={refs.growthRef} />
 				<SearchLandscape rootRef={refs.searchRef} />
+				<AiTech rootRef={refs.aiRef} />
 			</div>
 			{ANCHORS.map((a) => (
 				<span key={a.id} id={a.id} className="hero__anchor" style={{ top: `${a.vh}vh` }} aria-hidden="true" />

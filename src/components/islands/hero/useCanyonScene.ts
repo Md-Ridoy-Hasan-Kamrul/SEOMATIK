@@ -18,6 +18,7 @@ import {
 	type PlateImages,
 } from './canyonDom';
 import { createGrowthScene, loadGrowthExtras } from './growthScene';
+import { createAiDom } from './aiDom';
 import { createSearchDom } from './searchDom';
 import { useLatestRef } from './useLatestRef';
 
@@ -32,6 +33,7 @@ export interface CanyonSceneRefs {
 	levelsRef: RefObject<IntroLevels>;
 	growthRef: RefObject<HTMLElement | null>;
 	searchRef: RefObject<HTMLElement | null>;
+	aiRef: RefObject<HTMLElement | null>;
 }
 
 interface SceneElements {
@@ -41,12 +43,13 @@ interface SceneElements {
 	plates: HTMLDivElement;
 	growth: HTMLElement;
 	search: HTMLElement;
+	ai: HTMLElement;
 	images: PlateImages;
 }
 
 function resolveElements(refs: CanyonSceneRefs): SceneElements | null {
-	const { trackRef, stageRef, canvasRef, platesRef, plateImagesRef, growthRef, searchRef } = refs;
-	if (!trackRef.current || !stageRef.current || !canvasRef.current || !platesRef.current || !growthRef.current || !searchRef.current) return null;
+	const { trackRef, stageRef, canvasRef, platesRef, plateImagesRef, growthRef, searchRef, aiRef } = refs;
+	if (!trackRef.current || !stageRef.current || !canvasRef.current || !platesRef.current || !growthRef.current || !searchRef.current || !aiRef.current) return null;
 	return {
 		section: trackRef.current,
 		stage: stageRef.current,
@@ -54,6 +57,7 @@ function resolveElements(refs: CanyonSceneRefs): SceneElements | null {
 		plates: platesRef.current,
 		growth: growthRef.current,
 		search: searchRef.current,
+		ai: aiRef.current,
 		images: plateImagesRef.current,
 	};
 }
@@ -82,6 +86,7 @@ export function useCanyonScene(refs: CanyonSceneRefs, reducedMotion: boolean) {
 		const stage = createStyleWriter(els.stage);
 		const growth = createGrowthScene(els.growth, stage);
 		const search = createSearchDom(els.search, stage);
+		const ai = createAiDom(els.ai, stage);
 		let stopExtras = () => undefined as void;
 		const stopLoading = loadPlates(els.images, (index, image) => {
 			gl?.uploadPlate(index, image);
@@ -113,7 +118,9 @@ export function useCanyonScene(refs: CanyonSceneRefs, reducedMotion: boolean) {
 				framePos, dtS, timeS, viewW: view.w, viewH: view.h,
 				parallaxX: offset.x, parallaxY: offset.y, pointer: cursor, reducedMotion: reduced,
 			});
-			search.update(framePos, { viewW: view.w, viewH: view.h, parallaxX: offset.x, parallaxY: offset.y });
+			const layerView = { viewW: view.w, viewH: view.h, parallaxX: offset.x, parallaxY: offset.y };
+			search.update(framePos, layerView);
+			ai.update(framePos, layerView);
 			const frame = { framePos, ...levels, timeS, reducedMotion: reduced, parallaxX: offset.x, parallaxY: offset.y, growth: growthFrame };
 			if (gl) gl.render(frame);
 			else applyFallbackPlates(els.plates, els.images, framePos, levels);
@@ -124,6 +131,7 @@ export function useCanyonScene(refs: CanyonSceneRefs, reducedMotion: boolean) {
 			pointer.stop();
 			growth.stop();
 			search.stop();
+			ai.stop();
 			stopExtras();
 			stopResize();
 			stopLoading();

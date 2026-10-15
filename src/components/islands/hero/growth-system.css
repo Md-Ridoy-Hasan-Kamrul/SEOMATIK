@@ -1,0 +1,476 @@
+/*
+ * Section 3 — The SEOMATIK Growth System.
+ * Headline + statement sit on the 1352×968 design canvas scaled to fit (--u-fit),
+ * like section 2. Pins, labels and connections are placed in screen px by
+ * growthDom.ts (--px/--py/--stem/--s) so they stay locked to the rocks.
+ */
+
+.gs {
+	--u-fit: min(calc(100cqw / 1352), calc(100cqh / 968));
+	--page-mid-y: 484;
+	--warm: 255 178 92;
+	--warm-core: #ffe3b3;
+	position: absolute;
+	inset: 0;
+	z-index: 4;
+	pointer-events: none;
+	opacity: var(--gs-presence, 0);
+}
+
+.gs__head > * {
+	margin: 0;
+	font: inherit;
+}
+
+/* ---------------------------------------------------------- headline --- */
+
+.gs__kicker,
+.gs__line {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	line-height: 1;
+	white-space: nowrap;
+	text-transform: uppercase;
+}
+
+.gs__kicker {
+	padding-left: calc(var(--gs-k-track, 0.4149) * 1em);
+	font-family: var(--font-body);
+	font-weight: 400;
+	font-size: calc(var(--gs-k-size, 15.71) * var(--u-fit));
+	letter-spacing: calc(var(--gs-k-track, 0.4149) * 1em);
+	color: rgb(232 235 240 / 0.84);
+	transform: translate(calc(-50% + var(--gs-k-x, 1) * var(--u-fit)), calc(-50% + (var(--gs-k-y, 139.5) - var(--page-mid-y)) * var(--u-fit) + 0.02em));
+	opacity: var(--gs-k, 0);
+}
+
+.gs__line {
+	padding-left: calc(var(--track) * 1em);
+	font-size: calc(var(--size) * var(--u-fit));
+	letter-spacing: calc(var(--track) * 1em);
+	transform: translate(calc(-50% + var(--x) * var(--u-fit)), calc(-50% + (var(--y) - var(--page-mid-y)) * var(--u-fit) + var(--optical) + (1 - var(--o)) * 12px));
+	opacity: var(--o);
+}
+
+.gs__title .gs__line {
+	--optical: 0.054em;
+	font-family: 'Gilda Display', Georgia, 'Times New Roman', serif;
+	font-weight: 400;
+	background: linear-gradient(100deg, #ffffff 0%, #f1f2f4 55%, #c9ccd2 100%);
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+	filter: drop-shadow(0 2px 16px rgb(0 0 0 / 0.35));
+}
+
+.gs__sub .gs__line {
+	--optical: 0.02em;
+	font-family: var(--font-body);
+	font-weight: 500;
+	color: rgb(228 231 237 / 0.86);
+	text-shadow: 0 0 12px rgb(0 0 0 / 0.45);
+}
+
+.gs__title9 { --o: var(--gs-t9, 0); }
+.gs__title10 { --o: var(--gs-t10, 0); }
+.gs__sub9 { --o: var(--gs-s9, 0); }
+.gs__sub10 { --o: var(--gs-s10, 0); }
+
+/* ------------------------------------------------------- connections --- */
+
+.gs__links {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+
+.gs__link {
+	transition: opacity 280ms ease;
+}
+
+.gs__link-halo,
+.gs__link-core {
+	fill: none;
+	stroke-linecap: round;
+	stroke-dasharray: 1 2;
+	stroke-dashoffset: calc(1 - var(--draw, 0));
+	transition: stroke-width 280ms ease, stroke 280ms ease, opacity 280ms ease;
+}
+
+.gs__link-halo {
+	stroke: rgb(var(--warm) / 0.55);
+	stroke-width: 7;
+}
+
+.gs__link-core {
+	stroke: var(--warm-core);
+	stroke-width: 1.3;
+}
+
+.gs__pulse {
+	fill: #fff6e8;
+	filter: drop-shadow(0 0 4px rgb(var(--warm)));
+	opacity: clamp(0, calc((var(--draw, 0) - 0.96) * 25), 1);
+}
+
+.gs__link[data-hot] .gs__link-core {
+	stroke: #fff6e4;
+	stroke-width: 2.3;
+}
+
+.gs__link[data-hot] .gs__link-halo {
+	stroke: rgb(var(--warm) / 0.95);
+	stroke-width: 8;
+}
+
+.hero__stage[data-gs-hovering] .gs__link:not([data-hot]) {
+	opacity: 0.42;
+}
+
+/* -------------------------------------------------------------- pins --- */
+
+.gs__pin {
+	--ring: 16;
+	position: absolute;
+	left: 0;
+	top: 0;
+	transform: translate3d(calc(var(--px, -999) * 1px), calc(var(--py, -999) * 1px), 0);
+}
+
+.gs__pin::before,
+.gs__pin::after {
+	content: '';
+	position: absolute;
+	left: 0;
+}
+
+/* ring / core */
+.gs__pin::before {
+	top: 0;
+	width: calc(var(--ring) * var(--s, 1) * 1px);
+	height: calc(var(--ring) * var(--s, 1) * 1px);
+	border-radius: 50%;
+	transform: translate(-50%, -50%);
+}
+
+/* light stem fading downwards */
+.gs__pin::after {
+	top: calc(var(--ring) * var(--s, 1) * 0.5px);
+	width: var(--stem-w, 2px);
+	height: max(0px, calc(var(--stem, 0) * 1px - var(--ring) * var(--s, 1) * 0.5px));
+	transform: translateX(-50%);
+	background: linear-gradient(180deg, var(--stem-color) 0%, transparent 100%);
+}
+
+/* Picture9: dormant specialists — thin gold ring and hairline stem */
+.gs__pin--dormant {
+	--ring: 20;
+	--stem-w: 1.5px;
+	--stem-color: rgb(236 204 160 / 0.8);
+	opacity: var(--dormant, 0);
+}
+
+.gs__pin--dormant::before {
+	border: 1.5px solid rgb(236 204 160 / 0.92);
+	box-shadow: 0 0 8px rgb(var(--warm) / 0.35);
+}
+
+/* Picture10: active specialists — white core, warm ring and glow */
+.gs__pin--active {
+	--ring: 16;
+	--stem-w: 2px;
+	--stem-color: rgb(255 204 140 / 0.95);
+	opacity: var(--active, 0);
+	transition: filter 280ms ease;
+}
+
+.gs__pin--active::before {
+	background: radial-gradient(circle, #ffffff 0 30%, #ffe2b4 36% 52%, transparent 56%);
+	border: 1.5px solid rgb(255 196 120 / 0.95);
+	box-shadow: 0 0 10px 3px rgb(var(--warm) / 0.55), inset 0 0 3px rgb(255 255 255 / 0.6);
+	scale: calc(0.6 + var(--active, 0) * 0.4);
+}
+
+.gs__node[data-hot] .gs__pin--active {
+	filter: brightness(1.35) drop-shadow(0 0 10px rgb(var(--warm) / 0.9));
+}
+
+/* Strategy core */
+.gs__pin--core9 {
+	--ring: 18;
+	--stem-color: rgb(236 214 180 / 0.85);
+	opacity: var(--gs-core9, 0);
+}
+
+.gs__pin--core9::before {
+	background: radial-gradient(circle, #ffffff 0 34%, transparent 38%);
+	border: 1.5px solid rgb(236 210 170 / 0.92);
+	box-shadow: 0 0 14px 4px rgb(255 226 180 / 0.5);
+}
+
+.gs__pin--core10 {
+	--ring: 26;
+	--stem-w: 3px;
+	--stem-color: rgb(255 210 150 / 0.95);
+	opacity: var(--gs-core10, 0);
+}
+
+.gs__pin--core10::before {
+	background: radial-gradient(circle, #ffffff 0 30%, #ffe2b2 36%, rgb(var(--warm) / 0.6) 48%, transparent 62%);
+	box-shadow: 0 0 26px 10px rgb(var(--warm) / 0.55), 0 0 70px 26px rgb(var(--warm) / 0.22);
+	animation: gs-core-breathe 3.6s ease-in-out infinite;
+}
+
+.gs__pin--core10::after {
+	height: max(0px, calc((var(--stem, 0) * 1px - var(--ring) * var(--s, 1) * 0.5px) * var(--gs-stem10, 0)));
+}
+
+@keyframes gs-core-breathe {
+	0%, 100% { scale: 1; }
+	50% { scale: 1.08; }
+}
+
+/* ------------------------------------------------------------ labels --- */
+
+.gs__name {
+	position: absolute;
+	left: 0;
+	top: 0;
+	padding-left: calc(var(--track, 0) * 1em);
+	font-family: 'Gilda Display', Georgia, 'Times New Roman', serif;
+	font-weight: 400;
+	font-size: calc(var(--size, 18.44) * var(--s, 1) * 1px);
+	line-height: 1;
+	letter-spacing: calc(var(--track, 0) * 1em);
+	text-transform: uppercase;
+	white-space: nowrap;
+	color: #fbf2e4;
+	text-shadow: 0 0 10px rgb(var(--warm) / 0.5), 0 1px 3px rgb(0 0 0 / 0.65);
+	transform: translate3d(calc(var(--px, -999) * 1px), calc(var(--py, -999) * 1px), 0) translate(-50%, calc(-50% + 0.054em));
+	transition: color 260ms ease, text-shadow 260ms ease, opacity 260ms ease;
+}
+
+.gs__node .gs__name {
+	opacity: var(--active, 0);
+}
+
+.gs__name--strategy9 { opacity: var(--gs-l9, 0); }
+.gs__name--strategy10 { opacity: var(--gs-l10, 0); }
+
+.gs__node[data-hot] .gs__name {
+	color: #ffffff;
+	text-shadow: 0 0 14px rgb(var(--warm) / 0.95), 0 0 28px rgb(var(--warm) / 0.55), 0 1px 3px rgb(0 0 0 / 0.6);
+}
+
+.hero__stage[data-gs-hovering] .gs__node:not([data-hot]) .gs__name {
+	opacity: calc(var(--active, 0) * 0.6);
+}
+
+.gs__nodes {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.gs__node {
+	outline: none;
+}
+
+.hero__stage[data-gs-live] .gs__node .gs__name {
+	pointer-events: auto;
+	cursor: default;
+}
+
+.gs__node:focus-visible .gs__name {
+	outline: 1px solid rgb(255 226 180 / 0.9);
+	outline-offset: 6px;
+	border-radius: 3px;
+}
+
+/* -------------------------------------------- statement + CTA (foot) --- */
+
+.gs__foot {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: calc(16 * var(--u-fit));
+	width: calc(640 * var(--u-fit));
+	transform: translate(-50%, calc(-50% + (880 - var(--page-mid-y)) * var(--u-fit)));
+}
+
+/* Soft dark pool so the statement reads over the bright wet floor. */
+.gs__foot::before {
+	content: '';
+	position: absolute;
+	inset: -40% -18%;
+	z-index: -1;
+	background: radial-gradient(50% 50% at 50% 50%, rgb(6 6 8 / 0.62), rgb(6 6 8 / 0.3) 55%, transparent 78%);
+	opacity: var(--gs-statement, 0);
+	pointer-events: none;
+}
+
+.gs__statement {
+	margin: 0;
+	font-family: var(--font-body);
+	font-size: max(13px, calc(15.22 * var(--u-fit)));
+	line-height: 1.55;
+	text-align: center;
+	color: rgb(242 240 236 / 0.94);
+	text-shadow: 0 0 16px rgb(0 0 0 / 0.75), 0 1px 3px rgb(0 0 0 / 0.6);
+	opacity: var(--gs-statement, 0);
+	transform: translateY(calc((1 - var(--gs-statement, 0)) * 10px));
+}
+
+.gs__cta {
+	display: inline-flex;
+	align-items: center;
+	gap: calc(14 * var(--u-fit));
+	height: max(36px, calc(38 * var(--u-fit)));
+	padding: 0 calc(19 * var(--u-fit)) 0 calc(22 * var(--u-fit));
+	border-radius: 999px;
+	background: #ffffff;
+	color: #17181b;
+	font-family: var(--font-body);
+	font-size: max(12px, calc(12 * var(--u-fit)));
+	font-weight: 500;
+	line-height: 1;
+	text-decoration: none;
+	white-space: nowrap;
+	opacity: var(--gs-cta, 0);
+	transform: translateY(calc((1 - var(--gs-cta, 0)) * 10px));
+	transition: background-color 220ms ease;
+}
+
+.gs__cta:hover {
+	background: #ece9e4;
+}
+
+.gs__cta:focus-visible {
+	outline: 1px solid #fff;
+	outline-offset: 4px;
+}
+
+.hero__stage[data-gs-live] .gs__cta {
+	pointer-events: auto;
+}
+
+/* ---------------------------------------------------- reduced motion --- */
+
+@media (prefers-reduced-motion: reduce) {
+	.gs__pulse {
+		display: none;
+	}
+
+	.gs__pin--core10::before {
+		animation: none;
+	}
+
+	.gs__line,
+	.gs__statement,
+	.gs__cta {
+		transform: none;
+	}
+}
+
+/* Orbit layout (narrow screens): the sun sits behind the system, so give it a dark pool. */
+.gs[data-orbit]::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: radial-gradient(62% 30% at 50% 54%, rgb(5 5 8 / 0.55), rgb(5 5 8 / 0.25) 60%, transparent 85%);
+	opacity: var(--gs-core10, 0);
+}
+
+.gs[data-orbit] .gs__name {
+	text-shadow: 0 0 10px rgb(var(--warm) / 0.45), 0 1px 4px rgb(0 0 0 / 0.9), 0 0 14px rgb(0 0 0 / 0.6);
+}
+
+/* ------------------------------------------- tablet + mobile (≤768) --- */
+
+@media (max-width: 768px) {
+	.gs__head {
+		position: absolute;
+		top: 84px;
+		left: 16px;
+		right: 16px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 12px;
+		text-align: center;
+	}
+
+	.gs__head::before {
+		content: '';
+		position: absolute;
+		inset: -24px -16px;
+		z-index: -1;
+		background: radial-gradient(70% 60% at 50% 50%, rgb(5 5 8 / 0.5), transparent 80%);
+		pointer-events: none;
+	}
+
+	.gs__kicker,
+	.gs__line {
+		position: static;
+		transform: none;
+		white-space: normal;
+	}
+
+	.gs__kicker {
+		font-size: 10px;
+		letter-spacing: 0.34em;
+		padding-left: 0.34em;
+	}
+
+	.gs__title,
+	.gs__sub {
+		display: grid;
+		justify-items: center;
+	}
+
+	.gs__title .gs__line,
+	.gs__sub .gs__line {
+		grid-area: 1 / 1;
+	}
+
+	.gs__title .gs__line {
+		font-size: clamp(22px, 6.6vw, 40px);
+		letter-spacing: 0.08em;
+		padding-left: 0.08em;
+		line-height: 1.12;
+	}
+
+	.gs__sub .gs__line {
+		font-size: 10px;
+		letter-spacing: 0.28em;
+		padding-left: 0.28em;
+		line-height: 1.6;
+	}
+
+	.gs__foot {
+		top: auto;
+		bottom: 24px;
+		width: min(100% - 32px, 360px);
+		gap: 14px;
+		transform: translateX(-50%);
+	}
+
+	.gs__statement {
+		font-size: 12.5px;
+	}
+
+	.gs__cta {
+		justify-content: center;
+		gap: 12px;
+		width: 100%;
+		height: 44px;
+		font-size: 13px;
+	}
+}

@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { CANYON_PLATES, EDGE_V_MAX, LAST_FRAME, WORDMARK_POSES } from './canyonPlates';
 import {
+	CANYON_PLATES,
+	EDGE_V_MAX,
+	LAST_FRAME,
+	SECTION2_START_FRAME,
+	SECTION3_START_FRAME,
+	WORDMARK_FADE_OUT_END,
+	WORDMARK_POSES,
+} from './canyonPlates';
+import {
+	CAMERA,
+	cameraPushAt,
 	catmullRom,
+	crossfadeAt,
+	warpAt,
+	parallaxStrengthAt,
 	coverScale,
 	crossfadeWeight,
 	damp,
@@ -157,13 +170,63 @@ describe('framePosFromProgress', () => {
 	});
 });
 
+describe('cameraPushAt', () => {
+	it('does not zoom while the canyon is still opening (frames 1–5)', () => {
+		for (let f = 0; f <= SECTION2_START_FRAME; f += 0.25) expect(cameraPushAt(f)).toBe(1);
+	});
+
+	it('pushes the outgoing plate forward during section 2, exact at keyframes', () => {
+		expect(cameraPushAt(SECTION2_START_FRAME + 0.5)).toBeGreaterThan(1);
+		expect(cameraPushAt(SECTION2_START_FRAME + 0.5)).toBeLessThanOrEqual(1 + CAMERA.PUSH_MAX);
+		expect(cameraPushAt(SECTION2_START_FRAME + 0.25)).toBeLessThan(cameraPushAt(SECTION2_START_FRAME + 0.75));
+		expect(cameraPushAt(SECTION2_START_FRAME + 1)).toBe(1);
+	});
+});
+
+describe('crossfadeAt', () => {
+	it('dissolves across the whole segment while the canyon opens', () => {
+		expect(crossfadeAt(2.5)).toBeCloseTo(crossfadeWeight(0.5), 10);
+	});
+
+	it('finishes the plate change early in section 3 so the scene is clean for the reveal', () => {
+		const f = SECTION3_START_FRAME + CAMERA.S3_DISSOLVE_END;
+		expect(crossfadeAt(f)).toBe(1);
+		expect(crossfadeAt(SECTION3_START_FRAME + 0.9)).toBe(1);
+		expect(crossfadeAt(SECTION3_START_FRAME)).toBe(0);
+	});
+});
+
+describe('warpAt', () => {
+	it('warps the canyon edges up to frame 8, then switches off (plates 9/10 are not a canyon gap)', () => {
+		expect(warpAt(3)).toBe(1);
+		expect(warpAt(SECTION3_START_FRAME)).toBe(1);
+		expect(warpAt(SECTION3_START_FRAME + 0.01)).toBe(0);
+	});
+});
+
+describe('parallaxStrengthAt', () => {
+	it('keeps the intro still and ramps in as the reveal starts', () => {
+		expect(parallaxStrengthAt(0)).toBe(0);
+		expect(parallaxStrengthAt(SECTION2_START_FRAME)).toBe(0);
+		expect(parallaxStrengthAt(SECTION2_START_FRAME + 0.5)).toBeGreaterThan(0);
+		expect(parallaxStrengthAt(SECTION2_START_FRAME + 1)).toBe(1);
+		expect(parallaxStrengthAt(LAST_FRAME)).toBe(1);
+	});
+});
+
 describe('wordmarkPoseAt', () => {
 	it('matches the measured pose at each keyframe', () => {
 		WORDMARK_POSES.forEach((pose, i) => {
 			const at = wordmarkPoseAt(i);
 			expect(at.shiftYEm).toBeCloseTo(pose.shiftYEm, 10);
 			expect(at.scale).toBeCloseTo(pose.scale, 10);
+			expect(at.opacity).toBeCloseTo(pose.opacity, 10);
 		});
+	});
+
+	it('fades the ghost out quickly after frame 6 instead of across the whole segment', () => {
+		expect(wordmarkPoseAt(WORDMARK_FADE_OUT_END).opacity).toBe(0);
+		expect(wordmarkPoseAt(SECTION2_START_FRAME + 1.5).opacity).toBe(0);
 	});
 
 	it('interpolates linearly between keyframes', () => {

@@ -17,14 +17,15 @@
 .hero__stage {
 	--u-cover: max(calc(100cqw / 1352), calc(100cqh / 968));
 	--u-ui: calc(100cqw / 1352);
-	/* SEOMATIK: 92.2 px Gilda Display, 0.425 em tracking -> 8.12 em ink span */
-	--wm-gap: 0.425em;
-	--wm-span: 8.12;
+	/* SEOMATIK: 92.2 px Gilda Display; letters sit at measured centres (--x, em).
+	   --wm-track scales those centres on small screens; span = 7.603·track + glyph halves. */
+	--wm-track: 1;
+	--wm-span: calc(7.603 * var(--wm-track) + 0.51);
 	--wm-fill: 0.8;
 	--wm-size: min(calc(92.2 * var(--u-cover)), calc(100cqw * var(--wm-fill) / var(--wm-span)));
-	/* cap-height centre of the wordmark in frame 1 */
+	/* cap-height centre of the wordmark in frame 1; optical = cap centre vs line box */
 	--wm-center: 48%;
-	--wm-optical: 0em;
+	--wm-optical: 0.054em;
 
 	position: sticky;
 	top: 0;
@@ -81,8 +82,8 @@
 	left: 50%;
 	top: var(--wm-center);
 	z-index: 3;
-	display: flex;
-	gap: var(--wm-gap);
+	width: calc(var(--wm-span) * 1em);
+	height: 1em;
 	margin: 0;
 	font-family: 'Gilda Display', Georgia, 'Times New Roman', serif;
 	font-weight: 400;
@@ -93,13 +94,20 @@
 	opacity: 0;
 }
 
-/* Silver per-letter sheen: bright top-left, cooler grey bottom-right, as in the frames. */
+/* Silver per-letter sheen: bright top-left, cooler grey bottom-right, as in the frames.
+   The soft shadow keeps letters readable where they cross the bright open sky. */
 .hero-wordmark__char {
-	display: inline-block;
+	position: absolute;
+	top: 0;
+	left: 50%;
+	transform: translateX(calc(-50% + var(--x) * var(--wm-track) * 1em));
 	background: linear-gradient(112deg, #ffffff 10%, #eef0f2 45%, #b4b8be 92%);
 	-webkit-background-clip: text;
 	background-clip: text;
 	color: transparent;
+	filter: drop-shadow(0 1px 18px rgb(0 0 0 / 0.32));
+	/* scroll fade into a ghost (frame 6); the intro animates the parent's opacity */
+	opacity: var(--wm-fade, 1);
 }
 
 .hero-tagline {
@@ -117,8 +125,19 @@
 	line-height: 1;
 	text-transform: uppercase;
 	white-space: nowrap;
-	color: rgb(232 235 241 / 0.5);
+	/* --tag-fade: scroll exit when the reveal begins; the intro animates opacity */
+	color: rgb(232 235 241 / calc(0.5 * var(--tag-fade, 1)));
+	text-shadow: 0 0 12px rgb(0 0 0 / calc(0.5 * var(--tag-fade, 1)));
 	opacity: 0;
+}
+
+/* Scroll position where section 2 has settled; target of the nav's "Growth" link. */
+.hero__anchor {
+	position: absolute;
+	left: 0;
+	width: 1px;
+	height: 1px;
+	pointer-events: none;
 }
 
 /* --------------------------------------------------------------- nav --- */
@@ -148,11 +167,13 @@
 .hero-nav__brand {
 	justify-self: start;
 	font-family: 'Gilda Display', Georgia, serif;
-	font-size: clamp(14px, calc(18.4 * var(--u-ui)), 23px);
-	letter-spacing: 0.4em;
+	font-size: clamp(14px, calc(19.2 * var(--u-ui)), 24px);
+	letter-spacing: 0.38em;
 	line-height: 1;
 	color: #e9eaed;
 	text-decoration: none;
+	/* optical: caps sit 3 design px lower in the reference than the line box centre */
+	translate: 0 calc(3 * var(--u-ui));
 }
 
 .hero-nav__links {
@@ -163,7 +184,7 @@
 	padding: 0;
 	list-style: none;
 	/* optical offset of the link group in the reference frames */
-	translate: calc(7 * var(--u-ui)) 0;
+	translate: calc(7 * var(--u-ui)) calc(1.5 * var(--u-ui));
 }
 
 .hero-nav__link {
@@ -173,6 +194,7 @@
 	line-height: 1;
 	color: rgb(236 238 242 / 0.92);
 	text-decoration: none;
+	text-shadow: 0 0 14px rgb(0 0 0 / 0.45);
 	transition: color 200ms ease;
 }
 
@@ -186,7 +208,7 @@
 	align-items: center;
 	gap: clamp(12px, calc(19 * var(--u-ui)), 22px);
 	height: clamp(40px, calc(47 * var(--u-ui)), 54px);
-	padding: 0 clamp(16px, calc(21 * var(--u-ui)), 26px);
+	padding: 0 clamp(15px, calc(18 * var(--u-ui)), 24px);
 	border: 1px solid rgb(236 238 242 / 0.6);
 	border-radius: 999px;
 	font-family: var(--font-body);
@@ -259,8 +281,7 @@
 /* Tablet (768) and below: burger menu, slightly tighter tracking. */
 @media (max-width: 768px) {
 	.hero__stage {
-		--wm-gap: 0.32em;
-		--wm-span: 7.38;
+		--wm-track: 0.86;
 		--wm-fill: 0.82;
 	}
 
@@ -317,8 +338,7 @@
 /* Mobile L/M/S (425 / 375 / 320): fill more width, keep one line. */
 @media (max-width: 425px) {
 	.hero__stage {
-		--wm-gap: 0.24em;
-		--wm-span: 6.82;
+		--wm-track: 0.78;
 		--wm-fill: 0.86;
 	}
 

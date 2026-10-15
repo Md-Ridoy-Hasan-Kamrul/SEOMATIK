@@ -1,0 +1,331 @@
+/*
+ * Section 2 — Canyon Opening / Hero Reveal.
+ * Desktop lays everything out on the 1352×968 reference canvas scaled to fit
+ * (--u-fit = 1 design px). Positions are measured on Picture6–8; the scroll
+ * loop writes the animated values (--l1-*, --l2-*, --disc, --expl, --cta, …).
+ */
+
+.reveal {
+	--u-fit: min(calc(100cqw / 1352), calc(100cqh / 968));
+	--page-mid-y: 484;
+	position: absolute;
+	inset: 0;
+	z-index: 4;
+	pointer-events: none;
+	/* lifts away as section 3 begins */
+	opacity: var(--reveal-presence, 1);
+	translate: 0 calc((1 - var(--reveal-presence, 1)) * -28px);
+}
+
+.reveal__title {
+	position: absolute;
+	inset: 0;
+	margin: 0;
+	font: inherit;
+}
+
+/* ---------------------------------------------------------- headline --- */
+
+.reveal__line {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	padding-left: calc(var(--track) * 1em);
+	font-family: 'Gilda Display', Georgia, 'Times New Roman', serif;
+	font-weight: 400;
+	font-size: calc(var(--size) * var(--u-fit));
+	line-height: 1;
+	letter-spacing: calc(var(--track) * 1em);
+	white-space: nowrap;
+	background: linear-gradient(100deg, #ffffff 0%, #f2f3f5 55%, #c3c7cd 100%);
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+	/* Gilda's cap centre sits 0.054em above its line-box centre */
+	transform: translate(calc(-50% + var(--x) * var(--u-fit)), calc(-50% + (var(--y) - var(--page-mid-y)) * var(--u-fit) + 0.054em));
+	/* line-by-line wipe with a soft leading edge, as in frame 6 */
+	-webkit-mask-image: linear-gradient(90deg, #000 calc(var(--wipe) * 130% - 30%), transparent calc(var(--wipe) * 130%));
+	mask-image: linear-gradient(90deg, #000 calc(var(--wipe) * 130% - 30%), transparent calc(var(--wipe) * 130%));
+	filter: drop-shadow(0 2px 18px rgb(0 0 0 / 0.3));
+}
+
+.reveal__line--1 {
+	--x: var(--l1-x, -5);
+	--y: var(--l1-y, 385);
+	--size: var(--l1-size, 43.97);
+	--track: var(--l1-track, 0.2274);
+	--wipe: var(--l1-wipe, 0);
+}
+
+.reveal__line--2 {
+	--x: var(--l2-x, 3);
+	--y: var(--l2-y, 450.5);
+	--size: var(--l2-size, 70.92);
+	--track: var(--l2-track, 0.2155);
+	--wipe: var(--l2-wipe, 0);
+}
+
+/* Short rule under "WE BUILD" while it enters (frame 6): solid, then a fading tail. */
+.reveal__rule {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: calc(95 * var(--u-fit));
+	height: max(1px, calc(2 * var(--u-fit)));
+	background: linear-gradient(90deg, rgb(255 255 255 / 0.88) 0%, rgb(255 255 255 / 0.88) 80%, rgb(255 255 255 / 0) 100%);
+	transform-origin: left center;
+	transform: translate(calc((235 - 676) * var(--u-fit)), calc((512.5 - var(--page-mid-y)) * var(--u-fit))) scaleX(var(--rule-draw, 0));
+	opacity: var(--rule-alpha, 0);
+}
+
+/* -------------------------------------------------------------- body --- */
+
+.reveal__body {
+	position: absolute;
+	inset: 0;
+	transform: translateY(calc(var(--body-shift, 0) * var(--u-fit)));
+}
+
+.reveal__disciplines {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	display: flex;
+	margin: 0;
+	padding: 0 0 0 0.2718em;
+	list-style: none;
+	font-family: var(--font-body);
+	font-size: max(10.5px, calc(15.71 * var(--u-fit)));
+	font-weight: 500;
+	line-height: 1;
+	letter-spacing: 0.2718em;
+	text-transform: uppercase;
+	white-space: nowrap;
+	color: rgb(240 241 244 / 0.94);
+	text-shadow: 0 0 14px rgb(0 0 0 / 0.45);
+	transform: translate(calc(-50% - 2.5 * var(--u-fit)), calc(-50% + (513 - var(--page-mid-y)) * var(--u-fit)));
+}
+
+.reveal__disciplines li {
+	--p: clamp(0, calc(var(--disc, 0) * 1.84 - var(--i) * 0.12), 1);
+	opacity: var(--p);
+	transform: translateY(calc((1 - var(--p)) * 0.5em));
+}
+
+.reveal__disciplines li + li::before {
+	content: ' · ';
+	white-space: pre;
+}
+
+.reveal__explanation {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	margin: 0;
+	font-family: var(--font-body);
+	font-size: max(13px, calc(15.22 * var(--u-fit)));
+	font-weight: 400;
+	line-height: 1.511;
+	text-align: center;
+	white-space: nowrap;
+	color: rgb(236 238 242 / 0.92);
+	text-shadow: 0 0 14px rgb(0 0 0 / 0.45);
+	transform: translate(calc(-50% - 1.5 * var(--u-fit)), calc(-50% + (566.7 - var(--page-mid-y)) * var(--u-fit)));
+}
+
+.reveal__explanation span {
+	--p: clamp(0, calc(var(--expl, 0) * 1.5 - var(--i) * 0.5), 1);
+	display: block;
+	opacity: var(--p);
+	transform: translateY(calc((1 - var(--p)) * 0.4em));
+}
+
+.reveal__ctas {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	display: flex;
+	align-items: center;
+	gap: calc(27 * var(--u-fit));
+	transform: translate(calc(-50% - 0.5 * var(--u-fit)), calc(-50% + (632.5 - var(--page-mid-y)) * var(--u-fit)));
+}
+
+.reveal__cta {
+	--p: clamp(0, calc(var(--cta, 0) * 1.6 - var(--i) * 0.6), 1);
+	display: inline-flex;
+	align-items: center;
+	border-radius: 999px;
+	font-family: var(--font-body);
+	font-size: max(12px, calc(12 * var(--u-fit)));
+	font-weight: 500;
+	line-height: 1;
+	text-decoration: none;
+	white-space: nowrap;
+	opacity: var(--p);
+	transform: translateY(calc((1 - var(--p)) * 10px));
+	transition: background-color 220ms ease, border-color 220ms ease, color 220ms ease;
+}
+
+.hero__stage[data-cta-live] .reveal__cta {
+	pointer-events: auto;
+}
+
+/* Keyboard focus reveals the CTAs even before scrolling reaches them. */
+.reveal__ctas:focus-within .reveal__cta {
+	opacity: 1;
+	transform: none;
+}
+
+.reveal__cta:focus-visible {
+	outline: 1px solid #fff;
+	outline-offset: 4px;
+}
+
+.reveal__cta--primary {
+	gap: calc(14 * var(--u-fit));
+	height: max(36px, calc(38 * var(--u-fit)));
+	padding: 0 calc(19 * var(--u-fit)) 0 calc(22 * var(--u-fit));
+	background: #ffffff;
+	color: #17181b;
+}
+
+.reveal__cta--primary:hover {
+	background: #e9ebee;
+}
+
+.reveal__cta--secondary {
+	gap: calc(17.5 * var(--u-fit));
+	height: max(36px, calc(39 * var(--u-fit)));
+	padding: 0 calc(18 * var(--u-fit)) 0 calc(20.5 * var(--u-fit));
+	border: 1px solid rgb(236 238 242 / 0.62);
+	background: rgb(10 12 16 / 0.12);
+	color: #f3f4f6;
+}
+
+.reveal__cta--secondary:hover {
+	border-color: rgb(236 238 242 / 0.95);
+	background: rgb(246 248 255 / 0.1);
+}
+
+/* ---------------------------------------------------- reduced motion --- */
+
+@media (prefers-reduced-motion: reduce) {
+	.reveal__line {
+		-webkit-mask-image: none;
+		mask-image: none;
+		opacity: var(--wipe);
+	}
+
+	.reveal__disciplines li,
+	.reveal__explanation span,
+	.reveal__cta {
+		transform: none;
+	}
+}
+
+/* ------------------------------------------- tablet + mobile (≤768) --- */
+
+@media (max-width: 768px) {
+	.reveal {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 20px;
+		padding: 88px 20px 40px;
+	}
+
+	/* Portrait crops put the bright sun behind the copy; a soft scrim keeps it legible. */
+	.reveal::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		background: radial-gradient(80% 42% at 50% 50%, rgb(4 6 10 / 0.5), transparent 78%);
+		opacity: var(--l1-wipe, 0);
+	}
+
+	.reveal__title,
+	.reveal__body {
+		position: static;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		transform: none;
+	}
+
+	.reveal__title {
+		gap: 0.35em;
+	}
+
+	.reveal__body {
+		gap: 18px;
+	}
+
+	.reveal__line,
+	.reveal__disciplines,
+	.reveal__explanation,
+	.reveal__ctas {
+		position: static;
+		transform: none;
+	}
+
+	/* Phones crop to brighter sky behind the text: firmer shadow, lighter silver. */
+	.reveal__line {
+		background-image: linear-gradient(100deg, #ffffff 0%, #f4f5f7 60%, #d9dce0 100%);
+		filter: drop-shadow(0 2px 14px rgb(0 0 0 / 0.55));
+	}
+
+	/* "DIGITAL GROWTH." ink ≈ 11.1em at 0.14em tracking → 7.4vw keeps it inside 320 px. */
+	.reveal__line--1 {
+		font-size: clamp(18px, 6.2vw, 40px);
+		letter-spacing: 0.22em;
+		padding-left: 0.22em;
+	}
+
+	.reveal__line--2 {
+		font-size: clamp(20px, 7.4vw, 56px);
+		letter-spacing: 0.14em;
+		padding-left: 0.14em;
+	}
+
+	.reveal__rule {
+		display: none;
+	}
+
+	.reveal__disciplines {
+		flex-wrap: wrap;
+		justify-content: center;
+		max-width: 360px;
+		font-size: 11px;
+		letter-spacing: 0.2em;
+		line-height: 2;
+		white-space: normal;
+	}
+
+	.reveal__explanation {
+		max-width: 34ch;
+		font-size: 14px;
+		line-height: 1.55;
+		white-space: normal;
+	}
+
+	.reveal__explanation span {
+		display: inline;
+	}
+
+	.reveal__ctas {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 10px;
+		width: min(100%, 300px);
+	}
+
+	.reveal__cta {
+		justify-content: center;
+		gap: 12px;
+		height: 46px;
+		padding: 0 20px;
+		font-size: 13px;
+	}
+}

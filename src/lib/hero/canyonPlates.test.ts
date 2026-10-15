@@ -7,10 +7,14 @@ import {
 	LAST_FRAME,
 	PLATE_ASPECT,
 	PLATE_SIZE,
+	SECTION2_START_FRAME,
+	SECTION3_START_FRAME,
+	WORDMARK_FADE_OUT_END,
 	WORDMARK_LETTER_CENTERS_EM,
 	WORDMARK_POSES,
 } from './canyonPlates';
-import { evalEdge } from './canyonMorph';
+import { evalEdge, wordmarkPoseAt } from './canyonMorph';
+import { REVEAL } from './revealTimeline';
 
 const PUBLIC_DIR = fileURLToPath(new URL('../../../public', import.meta.url));
 const SAMPLE_VS = Array.from({ length: 13 }, (_, i) => (i / 12) * EDGE_V_MAX);
@@ -18,9 +22,15 @@ const gapWidth = (index: number, v: number) =>
 	evalEdge(CANYON_PLATES[index].right, v) - evalEdge(CANYON_PLATES[index].left, v);
 
 describe('CANYON_PLATES data', () => {
-	it('has one plate per reference frame (Picture1..5)', () => {
-		expect(CANYON_PLATES).toHaveLength(5);
-		expect(LAST_FRAME).toBe(4);
+	it('has one plate per reference frame (Picture1..10)', () => {
+		expect(CANYON_PLATES).toHaveLength(10);
+		expect(LAST_FRAME).toBe(9);
+		expect(SECTION3_START_FRAME).toBe(7);
+	});
+
+	it('starts section 2 (canyon reveal) on the frame-5 plate', () => {
+		expect(SECTION2_START_FRAME).toBe(4);
+		expect(SECTION2_START_FRAME).toBeLessThan(LAST_FRAME);
 	});
 
 	it('points at plate files that exist in /public', () => {
@@ -46,7 +56,7 @@ describe('CANYON_PLATES data', () => {
 	});
 
 	it('the light gap widens frame by frame (canyon opening)', () => {
-		for (let i = 1; i < CANYON_PLATES.length; i++) {
+		for (let i = 1; i <= SECTION3_START_FRAME; i++) {
 			expect(gapWidth(i, 0.3)).toBeGreaterThan(gapWidth(i - 1, 0.3));
 		}
 	});
@@ -77,13 +87,36 @@ describe('WORDMARK_LETTER_CENTERS_EM', () => {
 describe('WORDMARK_POSES', () => {
 	it('has one pose per frame and starts at the resting pose', () => {
 		expect(WORDMARK_POSES).toHaveLength(CANYON_PLATES.length);
-		expect(WORDMARK_POSES[0]).toEqual({ shiftYEm: 0, scale: 1 });
+		expect(WORDMARK_POSES[0]).toEqual({ shiftYEm: 0, scale: 1, opacity: 1 });
 	});
 
-	it('only drifts subtly (< 0.25em, < 3% scale)', () => {
-		for (const pose of WORDMARK_POSES) {
+	it('only drifts subtly while the canyon opens (frames 1–5)', () => {
+		for (const pose of WORDMARK_POSES.slice(0, SECTION2_START_FRAME + 1)) {
 			expect(Math.abs(pose.shiftYEm)).toBeLessThan(0.25);
 			expect(Math.abs(pose.scale - 1)).toBeLessThan(0.03);
+			expect(pose.opacity).toBe(1);
+		}
+	});
+
+	it('is fully gone before "WE BUILD" moves up into its row (no letter collisions)', () => {
+		expect(WORDMARK_FADE_OUT_END).toBeGreaterThan(SECTION2_START_FRAME + 1);
+		expect(WORDMARK_FADE_OUT_END).toBeLessThanOrEqual(REVEAL.LINE1_MOVE[0] + 0.05);
+	});
+
+	it('rises to a faint ghost in frame 6, then leaves', () => {
+		const ghost = WORDMARK_POSES[SECTION2_START_FRAME + 1];
+		expect(ghost.shiftYEm).toBeLessThan(-1);
+		expect(ghost.opacity).toBeGreaterThan(0);
+		expect(ghost.opacity).toBeLessThan(0.5);
+		expect(WORDMARK_POSES[LAST_FRAME].opacity).toBe(0);
+	});
+
+	it('never fades back in or drops back down', () => {
+		for (let i = 1; i < WORDMARK_POSES.length; i++) {
+			expect(WORDMARK_POSES[i].opacity).toBeLessThanOrEqual(WORDMARK_POSES[i - 1].opacity);
+		}
+		for (let i = SECTION2_START_FRAME + 1; i < WORDMARK_POSES.length; i++) {
+			expect(WORDMARK_POSES[i].shiftYEm).toBeLessThan(WORDMARK_POSES[i - 1].shiftYEm);
 		}
 	});
 });

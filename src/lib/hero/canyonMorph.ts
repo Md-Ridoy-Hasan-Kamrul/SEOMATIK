@@ -2,19 +2,36 @@
  * Pure maths for the canyon morph. The fragment shader mirrors `evalEdge` and
  * `warpX`; everything else runs on the CPU once per frame.
  */
-import { CANYON_PLATES, EDGE_V_MAX, LAST_FRAME, WORDMARK_POSES } from './canyonPlates';
+import {
+	CANYON_PLATES,
+	EDGE_V_MAX,
+	LAST_FRAME,
+	SECTION2_START_FRAME,
+	SECTION3_START_FRAME,
+	WORDMARK_FADE_OUT_END,
+	WORDMARK_POSES,
+} from './canyonPlates';
 import type { EdgeCurve, WordmarkPose } from './canyonPlates';
 import { clamp01, lerp, normalize, smoothstep } from './intro';
 
 export const SCROLL = {
-	/** Section height in vh: one sticky screen + the scrub distance. */
-	TRACK_VH: 400,
+	/** Track height in vh: one sticky screen + the scrub distance for frames 1→10. */
+	TRACK_VH: 960,
 	/** Progress kept on frame 1 before the canyon starts to open. */
-	HOLD_START: 0.04,
-	/** Progress at which frame 5 is reached; the rest of the track holds it. */
+	HOLD_START: 0.03,
+	/** Progress at which frame 10 is reached; the rest of the track holds the final layout. */
 	HOLD_END: 0.92,
 	/** Per-second smoothing toward the scroll target (higher = snappier). */
 	DAMPING: 9,
+} as const;
+
+export const CAMERA = {
+	/** Extra zoom of the outgoing plate across one section-2 segment ("camera pushes forward"). */
+	PUSH_MAX: 0.06,
+	/** Mouse parallax amplitude on the foreground rocks, as a fraction of the image width. */
+	PARALLAX_MAX: 0.006,
+	/** Section 3 plate changes finish this far into their segment, leaving room for the reveal. */
+	S3_DISSOLVE_END: 0.45,
 } as const;
 
 export interface FrameSegment {
@@ -85,12 +102,54 @@ export function framePosFromProgress(progress: number): number {
 	return normalize(progress, SCROLL.HOLD_START, SCROLL.HOLD_END) * LAST_FRAME;
 }
 
+/** Opacity follows the keyframes, except the frame-6 ghost leaves early (by WORDMARK_FADE_OUT_END). */
+function wordmarkOpacityAt(framePos: number): number {
+	const ghostFrame = SECTION2_START_FRAME + 1;
+	if (framePos > ghostFrame) {
+		return lerp(WORDMARK_POSES[ghostFrame].opacity, 0, normalize(framePos, ghostFrame, WORDMARK_FADE_OUT_END));
+	}
+	const { from, to, t } = frameSegment(framePos);
+	return lerp(WORDMARK_POSES[from].opacity, WORDMARK_POSES[to].opacity, t);
+}
+
 export function wordmarkPoseAt(framePos: number): WordmarkPose {
 	const { from, to, t } = frameSegment(framePos);
 	return {
 		shiftYEm: lerp(WORDMARK_POSES[from].shiftYEm, WORDMARK_POSES[to].shiftYEm, t),
 		scale: lerp(WORDMARK_POSES[from].scale, WORDMARK_POSES[to].scale, t),
+		opacity: wordmarkOpacityAt(framePos),
 	};
+}
+
+/**
+ * Zoom applied to the outgoing plate while it dissolves into the next one. Only
+ * in section 2, and 1 at every keyframe so each reference frame stays exact.
+ */
+/** Segment fraction driving the plate change: whole segment in sections 1–2, early window in section 3. */
+function dissolveT(framePos: number): { from: number; t: number } {
+	const { from, t } = frameSegment(framePos);
+	return { from, t: from >= SECTION3_START_FRAME ? normalize(t, 0, CAMERA.S3_DISSOLVE_END) : t };
+}
+
+/** Weight of the incoming plate. */
+export function crossfadeAt(framePos: number): number {
+	return crossfadeWeight(dissolveT(framePos).t);
+}
+
+export function cameraPushAt(framePos: number): number {
+	const { from, t } = dissolveT(framePos);
+	if (from < SECTION2_START_FRAME || t >= 1) return 1;
+	return 1 + CAMERA.PUSH_MAX * smoothstep(t);
+}
+
+/** Canyon edge warp applies while the gap opens; plates 9/10 are a new composition. */
+export function warpAt(framePos: number): number {
+	return framePos <= SECTION3_START_FRAME ? 1 : 0;
+}
+
+/** Mouse parallax fades in with the reveal; the intro stays perfectly still. */
+export function parallaxStrengthAt(framePos: number): number {
+	return smoothstep(normalize(framePos, SECTION2_START_FRAME, SECTION2_START_FRAME + 1));
 }
 
 /** Frame-rate independent exponential smoothing. */

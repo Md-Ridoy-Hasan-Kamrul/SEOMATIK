@@ -3,6 +3,8 @@ import '@fontsource/gilda-display/400.css';
 import { CANYON_PLATES, PLATE_SIZE, WORDMARK_LETTER_CENTERS_EM } from '../../../lib/hero/canyonPlates';
 import { SCROLL } from '../../../lib/hero/canyonMorph';
 import { INTRO, type IntroLevels } from '../../../lib/hero/introTimeline';
+import { CanyonReveal } from './CanyonReveal';
+import { GrowthSystem } from './GrowthSystem';
 import { HeroNav } from './HeroNav';
 import { HERO_BRAND, HERO_BRANDLINE } from './navItems';
 import { useCanyonScene } from './useCanyonScene';
@@ -12,10 +14,12 @@ import { useStartSignal } from './useStartSignal';
 import './hero-intro.css';
 
 const NO_SCRIPT_CSS = '.hero-wordmark,.hero-nav,.hero-tagline,.hero__plates,.hero__plates img:first-child{opacity:1}';
+/** Scroll offset (vh into the track) where the Growth System (section 3) has settled on Picture10. */
+const GROWTH_ANCHOR_VH = SCROLL.HOLD_END * (SCROLL.TRACK_VH - 100);
 
 function useHeroRefs() {
 	return {
-		sectionRef: useRef<HTMLElement>(null),
+		trackRef: useRef<HTMLDivElement>(null),
 		stageRef: useRef<HTMLDivElement>(null),
 		canvasRef: useRef<HTMLCanvasElement>(null),
 		platesRef: useRef<HTMLDivElement>(null),
@@ -24,6 +28,7 @@ function useHeroRefs() {
 		wordmarkRef: useRef<HTMLHeadingElement>(null),
 		navRef: useRef<HTMLElement>(null),
 		taglineRef: useRef<HTMLParagraphElement>(null),
+		growthRef: useRef<HTMLElement>(null),
 	};
 }
 
@@ -82,11 +87,10 @@ export default function HeroIntro() {
 	const intro = useHeroIntro(refs, start, reducedMotion);
 
 	return (
-		<section
-			ref={refs.sectionRef}
+		<div
+			ref={refs.trackRef}
 			className="hero"
 			id="top"
-			aria-label={HERO_BRAND}
 			data-hero=""
 			data-intro={intro}
 			data-renderer={renderer}
@@ -96,12 +100,17 @@ export default function HeroIntro() {
 				<CanyonPlates platesRef={refs.platesRef} plateImagesRef={refs.plateImagesRef} />
 				<canvas ref={refs.canvasRef} className="hero__canvas" aria-hidden="true" />
 				<HeroNav navRef={refs.navRef} />
-				<Wordmark wordmarkRef={refs.wordmarkRef} />
-				<p ref={refs.taglineRef} className="hero-tagline">
-					{HERO_BRANDLINE}
-				</p>
+				<section className="hero__brand" aria-label={HERO_BRAND}>
+					<Wordmark wordmarkRef={refs.wordmarkRef} />
+					<p ref={refs.taglineRef} className="hero-tagline">
+						{HERO_BRANDLINE}
+					</p>
+				</section>
+				<CanyonReveal />
+				<GrowthSystem rootRef={refs.growthRef} />
 			</div>
+			<span id="growth" className="hero__anchor" style={{ top: `${GROWTH_ANCHOR_VH}vh` }} aria-hidden="true" />
 			<noscript dangerouslySetInnerHTML={{ __html: `<style>${NO_SCRIPT_CSS}</style>` }} />
-		</section>
+		</div>
 	);
 }

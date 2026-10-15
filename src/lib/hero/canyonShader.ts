@@ -32,6 +32,20 @@ uniform float uMotion;
 uniform float uSlit;
 uniform float uRocks;
 uniform float uFog;
+uniform float uPush;
+uniform vec2 uParallax;
+// Section 3 (Growth System)
+uniform sampler2D uEmergeSrc;
+uniform sampler2D uMask9;
+uniform sampler2D uMask10;
+uniform float uS3;
+uniform float uMaskMix;
+uniform float uMaskOn;
+uniform float uEmergeOn;
+uniform vec4 uRise[7];
+uniform float uHoverId;
+uniform float uHoverAmt;
+uniform float uCoreGlow;
 
 const vec3 LUMA = vec3(0.2126, 0.7152, 0.0722);
 const vec3 FOG_TINT = vec3(0.86, 0.88, 0.92);
@@ -42,6 +56,10 @@ const float FOG_STRENGTH = 0.16;
 const float FOG_SPEED = 0.008;
 const float GRAIN_STRENGTH = 0.032;
 const float GRAIN_FPS = 24.0;
+const vec3 WARM = vec3(1.0, 0.78, 0.48);
+const float MASK_ID_STEP = 16.0;
+const float RISE_FOG_EDGE = 0.016;
+const float HALO_TAP = 0.0055;
 
 float edgeAt(vec3 c, float v) {
 	float vv = clamp(v, 0.0, uEdgeVMax);
@@ -54,13 +72,69 @@ float warpX(float x, float sl, float sr, float dl, float dr) {
 	return sl + (x - dl) * (sr - sl) / (dr - dl);
 }
 
-vec3 plate(sampler2D tex, vec3 l, vec3 r, vec2 uv, float lod) {
+vec3 plate(sampler2D tex, vec3 l, vec3 r, vec2 uv, float lod, float zoom) {
 	float sx = warpX(uv.x, edgeAt(l, uv.y), edgeAt(r, uv.y), edgeAt(uDstL, uv.y), edgeAt(uDstR, uv.y));
-	return textureLod(tex, vec2(mix(uv.x, sx, uWarp), uv.y), lod).rgb;
+	vec2 p = (vec2(mix(uv.x, sx, uWarp), uv.y) - 0.5) / zoom + 0.5;
+	return textureLod(tex, p, lod).rgb;
 }
 
+// The outgoing plate pushes toward the camera while it dissolves (uPush = 1 at keyframes).
 vec3 scene(vec2 uv, float lod) {
-	return mix(plate(uFrom, uFromL, uFromR, uv, lod), plate(uTo, uToL, uToR, uv, lod), uMix);
+	return mix(plate(uFrom, uFromL, uFromR, uv, lod, uPush), plate(uTo, uToL, uToR, uv, lod, 1.0), uMix);
+}
+
+// Depth proxy for the mouse parallax: floor rocks and the outer walls are nearest.
+float nearness(vec2 uv) {
+	float ground = smoothstep(0.62, 1.0, uv.y);
+	float walls = 1.0 - smoothstep(0.1, 0.32, min(uv.x, 1.0 - uv.x));
+	return max(ground, walls * 0.7);
+}
+
+float rockId(vec4 m) {
+	return floor(m.r * 255.0 / MASK_ID_STEP + 0.5);
+}
+
+// The seven specialists rise out of the landscape: each rock is sampled lower by its
+// remaining travel and clipped at its base row, so it emerges from the fog line.
+vec3 emergingRocks(vec2 uv, vec3 col) {
+	for (int i = 0; i < 7; i++) {
+		vec4 r = uRise[i];
+		if (r.x <= 0.0) continue;
+		vec2 src = vec2(uv.x, uv.y - r.y * (1.0 - r.x));
+		vec4 m = texture(uMask9, src);
+		if (abs(rockId(m) - r.w) > 0.5) continue;
+		float a = m.g * smoothstep(r.z, r.z - RISE_FOG_EDGE, uv.y) * smoothstep(0.0, 0.3, r.x);
+		vec3 rc = mix(texture(uEmergeSrc, src).rgb, FOG_TINT, (1.0 - r.x) * 0.35);
+		col = mix(col, rc, a * uMix);
+	}
+	return col;
+}
+
+// Coverage of one rock here and its inner rim (inside pixels near the silhouette edge).
+vec2 rockGlow(sampler2D mask, vec2 uv, float id) {
+	vec4 m = texture(mask, uv);
+	float inside = abs(rockId(m) - id) < 0.5 ? m.g : 0.0;
+	if (inside <= 0.0) return vec2(0.0);
+	float same = 0.0;
+	for (int k = 0; k < 8; k++) {
+		float a = float(k) * 0.785398;
+		vec2 o = vec2(cos(a), sin(a) * 1.397) * HALO_TAP;
+		same += abs(rockId(texture(mask, uv + o)) - id) < 0.5 ? 0.125 : 0.0;
+	}
+	return vec2(inside, inside * (1.0 - same));
+}
+
+// Warm rim light + gentle lift on one rock: hover highlight and the always-on strategy glow.
+vec3 lightRock(vec2 uv, vec3 col, float id, float amount) {
+	if (amount <= 0.001 || id < 0.5) return col;
+	vec2 g = mix(rockGlow(uMask9, uv, id), rockGlow(uMask10, uv, id), uMaskMix);
+	col *= 1.0 + 0.28 * g.x * amount;
+	col += WARM * (0.04 * g.x + 0.42 * g.y) * amount;
+	return col;
+}
+
+float maskDepth(vec2 uv) {
+	return mix(texture(uMask9, uv).b, texture(uMask10, uv).b, uMaskMix);
 }
 
 float hash(vec2 p) {
@@ -120,9 +194,18 @@ vec3 filmGrain(vec3 col) {
 void main() {
 	vec2 img = (vUv - 0.5) * uView + 0.5;
 	vec2 uv = vec2(img.x, 1.0 - img.y);
+	float near = mix(nearness(uv), maskDepth(uv), uS3 * uMaskOn);
+	uv += uParallax * near;
 	float s = surfaced(uv);
-	vec3 col = scene(uv, (1.0 - s) * EMERGE_MAX_LOD);
-	col = mix(sliverOfLight(uv, col) * uSlit, col, s);
+	// The light is crisp from its first moment; only the rock surfaces emerge from soft focus.
+	vec3 sharp = scene(uv, 0.0);
+	vec3 rock = s > 0.999 ? sharp : scene(uv, (1.0 - s) * EMERGE_MAX_LOD);
+	vec3 col = mix(sliverOfLight(uv, sharp) * uSlit, rock, s);
+	if (uEmergeOn > 0.5) col = emergingRocks(uv, col);
+	if (uMaskOn > 0.5) {
+		col = lightRock(uv, col, 1.0, uCoreGlow * uS3);
+		col = lightRock(uv, col, uHoverId, uHoverAmt * uS3);
+	}
 	col = groundFog(uv, col);
 	outColor = vec4(clamp(filmGrain(col), 0.0, 1.0), 1.0);
 }`;
